@@ -1,0 +1,16 @@
+{
+  "name": "비밀연구소 V3",
+  "short_name": "비밀연구소",
+  "description": "당신의 건강을 연구하는 비밀 공간",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F9FA",
+  "theme_color": "#2196F3",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ]
+}

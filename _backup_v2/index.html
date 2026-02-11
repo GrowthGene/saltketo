@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>비밀연구소: 솔티키토</title>
+
+    <!-- Fonts: Pretendard -->
+    <!-- Manifest & PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <meta name="theme-color" content="#2196F3">
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            --primary-100: #E3F2FD;
+            --primary-500: #2196F3;
+            --primary-700: #1565C0;
+            --accent-100: #FFF3E0;
+            --accent-500: #FF9800;
+            --accent-700: #F57C00;
+            --surface: #FFFFFF;
+            --background: #F0F4F8;
+            --text-main: #1A1D1E;
+            --text-muted: #6C757D;
+            --success: #00C853;
+            --warning: #FFD600;
+            --danger: #FF1744;
+
+            --radius-sm: 8px;
+            --radius-md: 20px;
+            --radius-lg: 32px;
+            --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.04);
+            --shadow-glow: 0 0 20px rgba(33, 150, 243, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #root {
+            width: 100%;
+            max-width: 440px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 40px;
+        }
+
+        /* Animation keyframes */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            box-shadow: var(--shadow-soft);
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary-700);
+        }
+
+        /* Energy Gauge Container */
+        .gauge-wrapper {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .gauge-circle {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02), var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            transition: all 0.5s ease;
+        }
+
+        .gauge-label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .gauge-value {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .gauge-unit {
+            font-size: 16px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .gauge-status {
+            margin-top: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-500);
+            padding: 4px 12px;
+            background: var(--primary-100);
+            border-radius: 20px;
+        }
+
+        /* Fluid Background (Pseudo) */
+        .fluid-bg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, var(--primary-100) 100%);
+            z-index: 1;
+            opacity: 0.5;
+            border-radius: var(--radius-md);
+        }
+
+        /* Buttons */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .btn-action {
+            background: var(--surface);
+            border: 2px solid var(--background);
+            border-radius: 12px;
+            padding: 16px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-action:active {
+            transform: scale(0.95);
+        }
+
+        .btn-action.active {
+            border-color: var(--primary-500);
+            background: var(--primary-100);
+        }
+
+        .btn-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            background: var(--background);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .btn-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Alert Banner */
+        .alert-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+            cursor: pointer;
+        }
+
+        /* Toggle Switch */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--background);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-card {
+            background: white;
+            padding: 32px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 360px;
+            text-align: center;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            margin: 16px 0;
+            border: 2px solid var(--background);
+            border-radius: 12px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .btn-confirm {
+            background: var(--text-main);
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* SVG Icons */
+        .icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .icon-lg {
+            width: 28px;
+            height: 28px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- Icons ---
+        const Icons = {
+            Bolt: () => <svg className="icon-lg" viewBox="0 0 24 24" fill="none" stroke="#FFD600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>,
+            Droplet: () => <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="#2196F3" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>,
+            Pill: () => <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="#F57C00" strokeWidth="2"><rect x="3" y="7" width="18" height="10" rx="5" ry="5" /><line x1="12" y1="7" x2="12" y2="17" /></svg>,
+            Utensils: () => <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></svg>,
+            Running: () => <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1D1E" strokeWidth="2"><path d="M22 2l-6 5-5-2-4 7v6" /><path d="M2 12l5-2" /><path d="M14 13l-4 8 2 2" /><path d="M18 10h2" /><circle cx="14" cy="4" r="2" /></svg>,
+            Bell: () => <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>,
+            Refresh: () => <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2"><path d="M23 4v6h-6" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>,
+            Check: () => <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="#00C853" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
+        };
+
+        // --- Components ---
+
+        const OnboardingModal = ({ onComplete }) => {
+            const [name, setName] = useState('');
+            const [weight, setWeight] = useState('');
+
+            return (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <h2 style={{ fontSize: '24px', marginBottom: '10px' }}>반가워요! 👋</h2>
+                        <p style={{ color: '#666', marginBottom: '20px' }}>대사 관리를 위한 필수 정보를 알려주세요.</p>
+                        <input
+                            className="modal-input"
+                            placeholder="이름 (닉네임)"
+                            value={name} onChange={e => setName(e.target.value)}
+                        />
+                        <input
+                            className="modal-input"
+                            type="number"
+                            placeholder="체중 (kg) - 목표량 계산용"
+                            value={weight} onChange={e => setWeight(e.target.value)}
+                        />
+                        <button
+                            className="btn-confirm"
+                            disabled={!name || !weight}
+                            style={{ opacity: (!name || !weight) ? 0.5 : 1 }}
+                            onClick={() => onComplete({ name, weight: Number(weight) })}
+                        >
+                            솔티키토 시작하기 ⚡
+                        </button>
+                        <p style={{ marginTop: '12px', fontSize: '12px', color: '#999' }}>데이터는 기기 내부에만 저장됩니다.</p>
+                    </div>
+                </div>
+            );
+        };
+
+        const EnergyGauge = ({ percent, status, label }) => {
+            // Dynamic gradient for border/fill effect simulation
+            const strokeDashoffset = 630 - (630 * percent) / 100; // approx circumference
+            const color = percent > 100 ? 'var(--danger)' : (percent >= 80 ? 'var(--success)' : 'var(--primary-500)');
+
+            return (
+                <div className="gauge-wrapper">
+                    <div className="fluid-bg" style={{ height: `${Math.min(percent, 100)}%` }}></div>
+
+                    {/* SVG Circle Graph */}
+                    <svg width="240" height="240" style={{ position: 'absolute', transform: 'rotate(-90deg)', zIndex: 1 }}>
+                        <circle cx="120" cy="120" r="100" stroke="#F0F4F8" strokeWidth="16" fill="transparent" />
+                        <circle
+                            cx="120" cy="120" r="100"
+                            stroke={color} strokeWidth="16" fill="transparent"
+                            strokeDasharray="630" strokeDashoffset={strokeDashoffset}
+                            strokeLinecap="round"
+                            style={{ transition: 'stroke-dashoffset 1s ease-out, stroke 0.5s' }}
+                        />
+                    </svg>
+
+                    <div className="gauge-circle">
+                        <div className="gauge-label">{label || 'Mineral Power'}</div>
+                        <div style={{ display: 'flex', alignItems: 'baseline' }}>
+                            <div className="gauge-value" style={{ color: color }}>{percent.toFixed(0)}</div>
+                            <span className="gauge-unit">%</span>
+                        </div>
+                        <div className="gauge-status" style={{ color: color, background: `${color}15` }}>
+                            {status}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ActionButton = ({ icon: Icon, label, sub, color, onClick }) => (
+            <button className="btn-action" onClick={onClick}>
+                <div className="btn-icon-wrapper" style={{ background: `${color}15` }}>
+                    <Icon />
+                </div>
+                <div>
+                    <div className="btn-label">{label}</div>
+                    <div className="btn-sub">{sub}</div>
+                </div>
+            </button>
+        );
+
+        const WeeklyGraph = ({ history, onClose }) => {
+            const maxVal = Math.max(...history.map(h => h.amount), 12);
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal-card" onClick={e => e.stopPropagation()} style={{ textAlign: 'left' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px' }}>📊 최근 7일 대사량</h3>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', height: '150px', gap: '8px', marginBottom: '10px' }}>
+                            {history.length === 0 ? <div style={{ width: '100%', textAlign: 'center', color: '#999' }}>데이터가 쌓이면 그래프가 나타납니다.</div> :
+                                history.map((h, i) => (
+                                    <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <div style={{ fontSize: '10px', color: '#666', marginBottom: '4px' }}>{h.amount}</div>
+                                        <div style={{
+                                            width: '100%',
+                                            height: `${(h.amount / maxVal) * 100}%`,
+                                            background: h.amount >= 10 ? 'var(--primary-500)' : '#ddd',
+                                            borderRadius: '4px'
+                                        }}></div>
+                                        <div style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>{h.date.slice(8, 10)}일</div>
+                                    </div>
+                                ))
+                            }
+                        </div>
+                        <button onClick={onClose} style={{ width: '100%', padding: '12px', background: '#eee', border: 'none', borderRadius: '12px', marginTop: '10px' }}>닫기</button>
+                    </div>
+                </div>
+            );
+        };
+
+        const ShareModal = ({ user, percent, totalSalt, onClose }) => {
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal-card" onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(135deg, #E3F2FD 0%, #FFFFFF 100%)' }}>
+                        <div style={{ fontSize: '40px', marginBottom: '10px' }}>🏆</div>
+                        <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--primary-700)', marginBottom: '4px' }}>오늘의 대사 천재</h2>
+                        <h3 style={{ fontSize: '16px', color: '#555', marginBottom: '20px' }}>{user.name} 연구원님</h3>
+
+                        <div style={{ background: 'white', padding: '20px', borderRadius: '16px', marginBottom: '20px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                            <div style={{ fontSize: '12px', color: '#999' }}>전해질 충전율</div>
+                            <div style={{ fontSize: '32px', fontWeight: 900, color: 'var(--primary-500)' }}>{percent.toFixed(0)}%</div>
+                            <div style={{ fontSize: '14px', color: '#666' }}>총 섭취량: {totalSalt}g</div>
+                        </div>
+
+                        <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
+                            "내 몸의 바다를 완벽하게 유지했어요! 🌊"<br />
+                            #비밀연구소 #솔티키토
+                        </p>
+
+                        <button onClick={onClose} style={{ width: '100%', padding: '14px', background: 'var(--primary-700)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700 }}>
+                            확인
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Main App ---
+
+        const App = () => {
+            // State
+            // State
+            const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')) || null);
+            const [logs, setLogs] = useState(() => JSON.parse(localStorage.getItem('logs')) || []);
+            const [history, setHistory] = useState(() => JSON.parse(localStorage.getItem('history')) || []); // New: History
+            const [lastDate, setLastDate] = useState(() => localStorage.getItem('lastDate'));
+            const [isRunning, setIsRunning] = useState({ type: 'REST', level: 0 });
+
+            const [showGraph, setShowGraph] = useState(false); // UI State
+            const [showShare, setShowShare] = useState(false); // UI State
+
+            // Constants
+            const BASE_GOAL = 10;
+
+            // Date Check & History Save
+            useEffect(() => {
+                const today = new Date().toLocaleDateString('ko-KR');
+                if (lastDate !== today) {
+                    if (lastDate && logs.length > 0) {
+                        // Save yesterday's data
+                        const yesterdayTotal = logs.reduce((acc, log) => acc + log.amount, 0);
+                        const newHistory = [...history, { date: lastDate, amount: yesterdayTotal }].slice(-7); // Keep last 7 days
+                        setHistory(newHistory);
+                        localStorage.setItem('history', JSON.stringify(newHistory));
+                    }
+                    setLastDate(today);
+                    localStorage.setItem('lastDate', today);
+                    setLogs([]);
+                    setIsRunning({ type: 'REST', level: 0 });
+                }
+            }, []);
+
+            // Persistence
+            useEffect(() => {
+                if (user) localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('logs', JSON.stringify(logs));
+            }, [user, logs]);
+
+            // Computations
+            const totalSalt = logs.reduce((acc, log) => acc + log.amount, 0);
+            const currentGoal = user ? (BASE_GOAL + isRunning.level) : BASE_GOAL;
+            const percent = Math.min((totalSalt / currentGoal) * 100, 120); // Cap visual at 120%
+
+            let statusText = "에너지 충전 중...";
+            if (percent >= 100) statusText = "MAX POWER! ⚡";
+            else if (percent >= 80) statusText = "거의 다 왔어요! 🔥";
+            else if (percent >= 30) statusText = "순항 중 ⛵";
+
+            // Condition Doctor Logic
+            const currentHour = new Date().getHours();
+            const isFakeHungerTime = currentHour >= 15 && currentHour <= 16;
+
+            // Handlers
+            const addLog = (amount, type) => {
+                const newLog = { id: Date.now(), amount, type, time: new Date().toLocaleTimeString() };
+                setLogs([...logs, newLog]);
+                // Trigger slight vibration if mobile
+                if (navigator.vibrate) navigator.vibrate(50);
+            };
+
+            const removeLog = (id) => {
+                if (confirm("이 기록을 삭제하시겠습니까?")) {
+                    setLogs((prevLogs) => prevLogs.filter(log => log.id !== id));
+                }
+            };
+
+            const handleReset = () => {
+                if (confirm("오늘 기록을 초기화하시겠어요?")) setLogs([]);
+            };
+
+            const handleFullReset = () => {
+                if (confirm("사용자 정보까지 모두 삭제합니다.")) {
+                    localStorage.clear();
+                    window.location.reload();
+                }
+            };
+
+            if (!user) return <OnboardingModal onComplete={setUser} />;
+
+            return (
+                <React.Fragment>
+                    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary-700)', marginBottom: '4px' }}>🧪 비밀연구소</div>
+                            <h1 className="header-title">반가워요, {user.name} 연구원님!</h1>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}</div>
+                        </div>
+                    </header>
+
+                    {/* 4 PM Fake Hunger Alert */}
+                    {isFakeHungerTime && totalSalt < currentGoal * 0.7 && (
+                        <div className="alert-banner" onClick={() => addLog(0.5, 'Emergency Salt')}>
+                            <Icons.Bell />
+                            <div>
+                                <div style={{ fontWeight: 700 }}>지금 배고픈 거 아니에요! 🙅‍♀️</div>
+                                <div style={{ fontSize: '13px', opacity: 0.9 }}>가짜 허기입니다. '소금 0.5g' 드세요.</div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Main Gauge */}
+                    <EnergyGauge percent={percent} status={statusText} label="전해질 에너지" />
+
+                    {/* Activity Card (Granular) */}
+                    <div className="card" style={{ padding: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <h2 style={{ fontSize: '16px', margin: 0 }}>🏃‍♂️ 오늘의 활동량</h2>
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                {isRunning.level > 0 ? `목표 +${isRunning.level}g 증가` : '기본 목표'}
+                            </span>
+                        </div>
+
+                        {/* 1. Mode Selector */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                            {['REST', 'RUNNING', 'WEIGHTS'].map(mode => (
+                                <button
+                                    key={mode}
+                                    onClick={() => setIsRunning({ type: mode, level: 0 })}
+                                    style={{
+                                        flex: 1, padding: '8px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
+                                        background: isRunning.type === mode ? 'var(--text-main)' : 'var(--background)',
+                                        color: isRunning.type === mode ? 'white' : 'var(--text-muted)',
+                                        border: 'none', cursor: 'pointer', transition: '0.2s'
+                                    }}
+                                >
+                                    {mode === 'REST' ? '휴식' : (mode === 'RUNNING' ? '러닝' : '웨이트')}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* 2. Sub Options */}
+                        {isRunning.type === 'RUNNING' && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                                {[
+                                    { label: '3km', val: 1.0 },
+                                    { label: '5km', val: 2.0 },
+                                    { label: '10km+', val: 4.0 }
+                                ].map(opt => (
+                                    <button
+                                        key={opt.label}
+                                        onClick={() => setIsRunning({ ...isRunning, level: opt.val })}
+                                        className={isRunning.level === opt.val ? 'active' : ''}
+                                        style={{
+                                            padding: '10px', borderRadius: '8px', border: '1px solid',
+                                            background: isRunning.level === opt.val ? '#E3F2FD' : 'white',
+                                            borderColor: isRunning.level === opt.val ? '#2196F3' : '#eee',
+                                            color: isRunning.level === opt.val ? '#1565C0' : '#666',
+                                            fontSize: '13px', cursor: 'pointer'
+                                        }}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {isRunning.type === 'WEIGHTS' && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                                {[
+                                    { label: '가볍게', val: 0.5 },
+                                    { label: '땀 송송', val: 1.5 },
+                                    { label: '땀 펑펑', val: 2.5 }
+                                ].map(opt => (
+                                    <button
+                                        key={opt.label}
+                                        onClick={() => setIsRunning({ ...isRunning, level: opt.val })}
+                                        style={{
+                                            padding: '10px', borderRadius: '8px', border: '1px solid',
+                                            background: isRunning.level === opt.val ? '#FFF3E0' : 'white',
+                                            borderColor: isRunning.level === opt.val ? '#FF9800' : '#eee',
+                                            color: isRunning.level === opt.val ? '#E65100' : '#666',
+                                            fontSize: '13px', cursor: 'pointer'
+                                        }}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {isRunning.type === 'REST' && (
+                            <div style={{ textAlign: 'center', fontSize: '12px', color: '#999', padding: '10px' }}>
+                                오늘은 무리하지 않고 회복에 집중할게요 🧘‍♀️
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Condition Message */}
+                    <div style={{ textAlign: 'center', margin: '10px 0', color: 'var(--text-muted)', fontSize: '13px' }}>
+                        {isRunning.level > 0 ? "땀 흘린 만큼 소금도 더 챙겨주세요!" : "오늘 당신의 몸은 얼마나 가벼워졌나요?"}
+                    </div>
+
+                    {/* Action Grid */}
+                    <div className="card">
+                        <h2 style={{ fontSize: '16px', marginBottom: '16px' }}>🔋 미네랄 충전</h2>
+                        <div className="btn-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                            <ActionButton
+                                icon={Icons.Droplet} label="소금물" sub="+2.0g" color="#2196F3"
+                                onClick={() => addLog(2.0, '소금물')}
+                            />
+                            <ActionButton
+                                icon={Icons.Pill} label="소금캡슐" sub="+0.5g" color="#FF9800"
+                                onClick={() => addLog(0.5, '캡슐')}
+                            />
+                            <ActionButton
+                                icon={() => <span style={{ fontSize: '20px' }}>🥗</span>} label="가볍게" sub="+0.5g" color="#4CAF50"
+                                onClick={() => addLog(0.5, '가벼운식사')}
+                            />
+                            <ActionButton
+                                icon={() => <span style={{ fontSize: '20px' }}>🥘</span>} label="일반식" sub="+1.5g" color="#4CAF50"
+                                onClick={() => addLog(1.5, '일반식사')}
+                            />
+                            <ActionButton
+                                icon={() => <span style={{ fontSize: '20px' }}>🍲</span>} label="외식/국" sub="+3.0g" color="#F44336"
+                                onClick={() => addLog(3.0, '외식/국물')}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Recent Logs (Tiny) */}
+                    {logs.length > 0 && (
+                        <div className="card" style={{ padding: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                <span style={{ fontSize: '12px', fontWeight: 600 }}>최근 기록 (클릭하여 삭제)</span>
+                                <span style={{ fontSize: '12px', color: '#999' }}>{logs.length}건</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+                                {logs.slice().reverse().map(log => (
+                                    <div
+                                        key={log.id}
+                                        onClick={() => removeLog(log.id)}
+                                        style={{ background: 'var(--background)', padding: '6px 12px', borderRadius: '12px', fontSize: '12px', whiteSpace: 'nowrap', cursor: 'pointer', border: '1px solid transparent', transition: '0.2s' }}
+                                        onMouseOver={(e) => e.target.style.borderColor = 'var(--danger)'}
+                                        onMouseOut={(e) => e.target.style.borderColor = 'transparent'}
+                                    >
+                                        {log.type} <strong style={{ color: 'var(--primary-700)' }}>+{log.amount}g</strong> <span style={{ color: 'var(--danger)', marginLeft: '4px' }}>×</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <footer style={{ textAlign: 'center', marginTop: 'auto', paddingTop: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '20px' }}>
+                            <button onClick={() => setShowGraph(true)} style={{ background: 'white', padding: '10px 20px', borderRadius: '20px', border: '1px solid #ddd', fontSize: '13px', fontWeight: 600 }}>
+                                📊 주간 리포트
+                            </button>
+                            <button onClick={() => setShowShare(true)} style={{ background: 'var(--primary-700)', color: 'white', padding: '10px 20px', borderRadius: '20px', border: 'none', fontSize: '13px', fontWeight: 600 }}>
+                                🏆 인증하기
+                            </button>
+                        </div>
+
+                        <button onClick={handleReset} style={{ border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: '12px', textDecoration: 'underline', marginRight: '10px' }}>오늘 기록 초기화</button>
+                        <button onClick={handleFullReset} style={{ border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: '12px', textDecoration: 'underline' }}>전체 리셋</button>
+                        <br /><br />
+                        <span style={{ fontSize: '11px', color: '#ccc' }}>V2.5 Secret Lab 🧪</span>
+                    </footer>
+
+                    {showGraph && <WeeklyGraph history={history} onClose={() => setShowGraph(false)} />}
+                    {showShare && <ShareModal user={user} percent={percent} totalSalt={totalSalt} onClose={() => setShowShare(false)} />}
+                </React.Fragment>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW Registered!', reg))
+                    .catch(err => console.log('SW Failed:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>

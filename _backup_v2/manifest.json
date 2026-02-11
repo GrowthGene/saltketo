@@ -1,0 +1,15 @@
+{
+  "name": "비밀연구소: 솔티키토 (SaltyKeto)",
+  "short_name": "솔티키토",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F0F4F8",
+  "theme_color": "#2196F3",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
