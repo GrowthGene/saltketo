@@ -1,10 +1,10 @@
-import { Home, BarChart2, Camera, User } from 'lucide-react';
+import { Home, BarChart2, Stethoscope, User } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const BottomNav = () => {
   const navItems = [
     { icon: Home, label: '홈', path: '/' },
-    { icon: Camera, label: '분석', path: '/analysis' },
+    { icon: Stethoscope, label: '자가진단', path: '/analysis' },
     { icon: BarChart2, label: '기록', path: '/stats' },
     { icon: User, label: '마이룸', path: '/profile' },
   ];
@@ -23,8 +23,8 @@ const BottomNav = () => {
       zIndex: 100
     }}>
       {navItems.map(({ icon: Icon, label, path }) => (
-        <NavLink 
-          key={path} 
+        <NavLink
+          key={path}
           to={path}
           style={({ isActive }) => ({
             display: 'flex',

@@ -89,8 +89,8 @@ const Analysis = () => {
     return (
         <div style={{ paddingBottom: '20px' }}>
             <header style={{ marginBottom: '24px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 800 }}>생체 신호 분석 🧬</h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>현재 몸 상태를 체크하여 필요한 성분을 분석합니다.</p>
+                <h1 style={{ fontSize: '24px', fontWeight: 800 }}>생체 신호 자가진단 🩺</h1>
+                <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>현재 몸 상태를 체크하여 필요한 성분을 처방합니다.</p>
             </header>
 
             {/* Symptom Checklist */}
