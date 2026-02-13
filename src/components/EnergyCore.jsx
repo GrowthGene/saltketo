@@ -1,17 +1,17 @@
 import React from 'react';
 
-const EnergyCore = ({ current, goal }) => {
-    const percentage = Math.min((current / goal) * 100, 100);
+const EnergyCore = ({ current, goal, percentage: propPercentage, color: propColor, status }) => {
+    // Use prop percentage if available, otherwise calculate
+    const percentage = propPercentage !== undefined ? propPercentage : Math.min((current / goal) * 100, 100);
 
-    // Color logic: 
-    // Low: Blue (Stable)
-    // Medium: Green (Optimal)
-    // High: Orange (Warning)
-    // Over: Red (Danger)
-    let color = '#2196F3'; // Blue
-    if (percentage > 100) color = '#F44336'; // Red
-    else if (percentage > 80) color = '#FF9800'; // Orange
-    else if (percentage > 40) color = '#00E676'; // Green
+    // Color logic: Prioritize prop color, else default logic
+    let color = propColor;
+    if (!color) {
+        color = '#2196F3'; // Blue
+        if (percentage > 100) color = '#F44336'; // Red
+        else if (percentage > 80) color = '#FF9800'; // Orange
+        else if (percentage > 40) color = '#00E676'; // Green
+    }
 
     return (
         <div style={{
@@ -49,12 +49,12 @@ const EnergyCore = ({ current, goal }) => {
                 transition: 'all 1s ease',
                 animation: 'pulse 3s ease-in-out infinite'
             }}>
-                <span style={{ fontSize: '12px', opacity: 0.8, color: 'white', fontWeight: 600 }}>ENERGY LEVEL</span>
+                <span style={{ fontSize: '12px', opacity: 0.8, color: 'white', fontWeight: 600 }}>{status || 'ENERGY LEVEL'}</span>
                 <span style={{ fontSize: '36px', fontWeight: 900, color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                    {percentage.toFixed(0)}%
+                    {typeof percentage === 'number' ? percentage.toFixed(0) : 0}%
                 </span>
                 <span style={{ fontSize: '12px', color: 'white', marginTop: '4px' }}>
-                    {current}g / {goal}g
+                    {current !== undefined ? `${current}g / ${goal}g` : 'Engine Active'}
                 </span>
             </div>
 

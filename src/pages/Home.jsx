@@ -22,6 +22,9 @@ const Home = () => {
         { label: '부스터', amount: 3.0, icon: Zap, color: '#F44336' },
     ];
 
+    const statusData = useData().getEngineStatus ? useData().getEngineStatus() : { status: 'idle', color: '#90A4AE', message: '로딩중...' };
+    const statusMsg = statusData.message;
+
     return (
         <div style={{ paddingBottom: '20px' }}>
             {/* Header / ID Card Snippet */}
@@ -31,7 +34,7 @@ const Home = () => {
                 <div>
                     <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString()}</div>
                     <div style={{ fontSize: '20px', fontWeight: 800 }}>
-                        안녕하세요, <span style={{ color: 'var(--primary-600)' }}>{user.name}</span>님
+                        <span style={{ color: 'var(--primary-600)' }}>{user.title}</span> {user.name}님
                     </div>
                 </div>
                 <div onClick={() => navigate('/profile')} style={{
@@ -40,38 +43,78 @@ const Home = () => {
                     cursor: 'pointer'
                 }}>
                     <span>Lv.{user.level}</span>
-                    <div style={{
-                        width: '30px', height: '4px', background: '#CFD8DC', borderRadius: '2px', overflow: 'hidden'
-                    }}>
-                        <div style={{ width: `${user.exp}%`, height: '100%', background: '#00E676' }} />
+                    <div style={{ background: '#CFD8DC', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, color: '#455A64' }}>
+                        {user.rp} RP
                     </div>
                 </div>
             </header>
 
             {/* Main Widget: Energy Core */}
-            <section className="card" style={{
-                marginBottom: '20px', textAlign: 'center', padding: '40px 20px',
-                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)'
+            <section className="card" onClick={() => alert('엔진 상세 정보: ' + statusMsg)} style={{
+                marginBottom: '20px', textAlign: 'center', padding: '40px 20px', cursor: 'pointer',
+                background: `linear-gradient(135deg, #ffffff 0%, ${statusData.color}15 100%)`,
+                border: `1px solid ${statusData.color}30`
             }}>
-                <div style={{ marginBottom: '20px', fontWeight: 700, color: '#546E7A' }}>연구소 에너지 코어</div>
-                <EnergyCore current={totalSalt} goal={goal} />
+                <div style={{ marginBottom: '20px', fontWeight: 700, color: statusData.color, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <Activity size={18} /> {statusMsg}
+                </div>
+                <EnergyCore percentage={statusData.status === 'burning' ? 100 : statusData.status === 'warming' ? 60 : 20} status={statusData.status} color={statusData.color} />
                 <div style={{ marginTop: '20px', fontSize: '13px', color: '#78909C' }}>
                     목표치까지 {Math.max(0, goal - totalSalt).toFixed(1)}g 남았습니다
                 </div>
             </section>
 
+            {/* Water Tracking Display */}
+            <div className="card" style={{ padding: '16px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ background: '#E1F5FE', padding: '10px', borderRadius: '12px' }}>
+                        <Droplet size={24} color="#03A9F4" />
+                    </div>
+                    <div>
+                        <div style={{ fontSize: '12px', color: '#78909C', fontWeight: 600 }}>순수 수분 섭취 (맹물)</div>
+                        <div style={{ fontSize: '20px', fontWeight: 800, color: '#0288D1' }}>
+                            {useData().waterIntake} <span style={{ fontSize: '14px' }}>ml</span>
+                        </div>
+                    </div>
+                </div>
+                <button onClick={() => useData().addWater(250)} style={{
+                    background: '#03A9F4', color: 'white', border: 'none', borderRadius: '12px',
+                    padding: '8px 16px', fontWeight: 700, fontSize: '13px', cursor: 'pointer'
+                }}>
+                    + 물 250ml
+                </button>
+            </div>
+
             {/* Quick Actions Grid */}
             <section style={{ marginBottom: '24px' }}>
                 <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Zap size={18} fill="#FFD700" color="#FFD700" /> 빠른 투입 (에너지 섭취)
+                    <Zap size={18} fill="#FFD700" color="#FFD700" /> 빠른 투입 (에너지 & 식단)
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
-                    {quickActions.map((action) => (
-                        <button key={action.label} onClick={() => addLog(action.amount, action.label)} style={{
-                            background: 'white', border: 'none', borderRadius: '16px', padding: '16px 4px',
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer', transition: 'transform 0.1s'
-                        }}>
+                    {/* Custom Action Buttons */}
+                    {[
+                        { label: '소금물 500ml', amount: 0.5, icon: Droplet, color: '#29B6F6', type: 'salt' },
+                        { label: '소금 캡슐', amount: 1.0, icon: Beaker, color: '#AB47BC', type: 'salt' },
+                        { label: '클린 식단', amount: 0, icon: Utensils, color: '#66BB6A', type: 'meal_clean' },
+                        { label: '일반 식사', amount: 0, icon: Utensils, color: '#FFCA28', type: 'meal_safe' },
+                    ].map((action) => (
+                        <button key={action.label}
+                            onClick={() => {
+                                if (action.type === 'meal_clean') {
+                                    useData().recordMeal(1);
+                                    alert('🥗 클린 식단 기록! (엔진 효율 상승)');
+                                } else if (action.type === 'meal_safe') {
+                                    useData().recordMeal(2);
+                                    alert('🍛 일반 식사 기록.');
+                                } else {
+                                    addLog(action.amount, action.label);
+                                }
+                            }}
+                            style={{
+                                background: 'white', border: 'none', borderRadius: '16px', padding: '16px 4px',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer', transition: 'transform 0.1s'
+                            }}>
                             <div style={{
                                 width: '40px', height: '40px', borderRadius: '12px', background: `${action.color}15`,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center'

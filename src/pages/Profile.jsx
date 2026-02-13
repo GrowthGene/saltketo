@@ -8,9 +8,16 @@ const Profile = () => {
     const [editName, setEditName] = useState(user.name);
     const [showSettings, setShowSettings] = useState(false);
 
-    // Derived from user.exp or similar logic
-    const nextLevelExp = 100; // Simplified
-    const progress = user.exp;
+    // V3 Level Logic
+    const LEVEL_THRESHOLDS = [0, 500, 2000, 5000, 15000];
+    const currentLevelIdx = user.level - 1;
+    const nextLevelRp = LEVEL_THRESHOLDS[currentLevelIdx + 1] || 15000;
+    const currentLevelBase = LEVEL_THRESHOLDS[currentLevelIdx] || 0;
+
+    // Calculate progress percentage for current level
+    const progress = Math.min(100, Math.max(0,
+        ((user.rp - currentLevelBase) / (nextLevelRp - currentLevelBase)) * 100
+    )) || 100; // If max level, 100%
 
     const handleSave = () => {
         if (editName.trim()) {
@@ -98,8 +105,8 @@ const Profile = () => {
                 {/* Level Bar */}
                 <div style={{ position: 'relative', zIndex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '6px', opacity: 0.8 }}>
-                        <span>EXP PROGRESS</span>
-                        <span>{user.exp}/{nextLevelExp}</span>
+                        <span>RP PROGRESS</span>
+                        <span>{user.rp} / {nextLevelRp} RP</span>
                     </div>
                     <div style={{ width: '100%', height: '6px', background: 'rgba(0,0,0,0.3)', borderRadius: '3px', overflow: 'hidden' }}>
                         <div style={{ width: `${progress}%`, height: '100%', background: '#00E676' }} />

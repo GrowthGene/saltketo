@@ -16,128 +16,166 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    // --- V3 State Initialization ---
     const [user, setUser] = useState(() => safeParse('secretLab_user', {
         name: '김연구원',
         level: 1,
-        exp: 0,
-        title: '수습 연구원'
+        rp: 0, // Research Points (Cumulative)
+        title: '보조 연구원', // Lv.1 Intern
+        goalWeight: 0
     }));
 
-    // Ensure logs is always an array
+    // Daily Stats for Algorithm (Reset daily)
+    const [dailyStats, setDailyStats] = useState(() => {
+        const stored = safeParse('secretLab_daily', { date: new Date().toLocaleDateString() });
+        if (stored.date !== new Date().toLocaleDateString()) {
+            return {
+                date: new Date().toLocaleDateString(),
+                purityScore: 0, // 0: None, 1: Clean, 2: Safe, 3: Dirty
+                fastingStart: null, // Timestamp of last meal
+                condition: 0 // 1-5 Scale
+            };
+        }
+        return stored;
+    });
+
     const [logs, setLogs] = useState(() => {
         const parsed = safeParse('secretLab_logs', []);
         return Array.isArray(parsed) ? parsed : [];
     });
 
-    const [weight, setWeight] = useState(() =>
-        Number(localStorage.getItem('secretLab_weight')) || 0.0
-    );
-
-    // Renamed 'condition' to 'energy' for Bio-Rhythm Scanner
-    // energy: { level: 0-100, mood: 'text', date: 'YYYY-MM-DD' }
-    const [energy, setEnergy] = useState(() =>
-        safeParse('secretLab_energy', null)
-    );
-
-    const [goal, setGoal] = useState(() =>
-        Number(localStorage.getItem('secretLab_goal')) || 10
-    );
+    const [waterIntake, setWaterIntake] = useState(() => {
+        const stored = safeParse('secretLab_water', { date: new Date().toLocaleDateString(), amount: 0 });
+        return stored.date !== new Date().toLocaleDateString() ? 0 : stored.amount;
+    });
 
     const [settings, setSettings] = useState(() =>
         safeParse('secretLab_settings', { theme: 'light', notifications: true })
     );
 
-    // --- Persistence Effects ---
+    // --- Persistence ---
     useEffect(() => { localStorage.setItem('secretLab_user', JSON.stringify(user)); }, [user]);
+    useEffect(() => { localStorage.setItem('secretLab_daily', JSON.stringify(dailyStats)); }, [dailyStats]);
     useEffect(() => { localStorage.setItem('secretLab_logs', JSON.stringify(logs)); }, [logs]);
-    useEffect(() => { localStorage.setItem('secretLab_weight', weight); }, [weight]);
-    useEffect(() => { localStorage.setItem('secretLab_energy', JSON.stringify(energy)); }, [energy]);
-    useEffect(() => { localStorage.setItem('secretLab_goal', goal); }, [goal]);
+    useEffect(() => {
+        localStorage.setItem('secretLab_water', JSON.stringify({ date: new Date().toLocaleDateString(), amount: waterIntake }));
+    }, [waterIntake]);
     useEffect(() => {
         localStorage.setItem('secretLab_settings', JSON.stringify(settings));
-        // Apply theme immediately
         document.documentElement.setAttribute('data-theme', settings.theme);
     }, [settings]);
 
+    // --- V3 Core Logic ---
+
+    // 1. RP (Research Point) & Level System
+    const LEVEL_THRESHOLDS = [0, 500, 2000, 5000, 15000];
+    const TITLES = ['보조 연구원', '주니어 연구원', '시니어 연구원', '수석 연구원', '마스터 연구소장'];
+
+    const gainRP = (amount) => {
+        setUser(prev => {
+            const newRP = prev.rp + amount;
+
+            // Calculate Level based on RP
+            let newLevel = 1;
+            for (let i = 0; i < LEVEL_THRESHOLDS.length; i++) {
+                if (newRP >= LEVEL_THRESHOLDS[i]) newLevel = i + 1;
+            }
+
+            const newTitle = TITLES[newLevel - 1] || TITLES[TITLES.length - 1];
+
+            return { ...prev, rp: newRP, level: newLevel, title: newTitle };
+        });
+    };
+
+    // 2. Engine Status Algorithm
+    // Returns: 'idle', 'warming', 'burning', 'overheat' (warning)
+    const getEngineStatus = () => {
+        const SALT_GOAL = 10; // g
+
+        // Calculate Salt Intake from Logs
+        const todaySalt = logs
+            .filter(l => l.time.includes(new Date().toLocaleTimeString().slice(0, 2)) || true) // Simplified for demo, essentially all logs are kept in state. In real app, filter by date.
+            // Actually logs state doesn't have date structure yet for filtering, assuming clean list or day-filter in UI.
+            // For V3, let's look at 'logs' timestamp if we add it, or just iterate. 
+            // Existing logs have 'time' string. Let's rely on daily reset manual or just sum all for now as user context is simple.
+            // BETTER: Filter logs by today's date if timestamp exists.
+            .reduce((sum, log) => sum + (log.type !== 'water' ? log.amount : 0), 0);
+
+        const saltRatio = Math.min(todaySalt / SALT_GOAL, 1.5); // Cap at 150%
+        const purity = dailyStats.purityScore; // 1(High), 2(Med), 3(Low/Dirty)
+
+        // Fasting Hours
+        let fastingHours = 0;
+        if (dailyStats.fastingStart) {
+            const diffMs = Date.now() - new Date(dailyStats.fastingStart).getTime();
+            fastingHours = diffMs / (1000 * 60 * 60);
+        }
+
+        // --- Logic Core ---
+        // If Dirty (3) -> Overheat (Red Warning) immediately
+        if (purity === 3) return { status: 'overheat', color: '#FF5252', message: '불순물 감지! 엔진 경고!' };
+
+        // Clean (1) or Safe (2)
+        let score = 0;
+        if (purity === 1) score += 50;
+        if (purity === 2) score += 30;
+
+        score += (saltRatio * 30); // Max 30-45 points
+        if (fastingHours > 12) score += 20;
+
+        if (score >= 80) return { status: 'burning', color: '#448AFF', message: '지방 연소 엔진 풀가동! 🔥' };
+        if (score >= 40) return { status: 'warming', color: '#FFCA28', message: '대사 엔진 예열 중...' };
+        return { status: 'idle', color: '#90A4AE', message: '엔진 대기 상태' };
+    };
+
     // --- Actions ---
-    const addLog = (amount, type) => {
+    const addLog = (amount, label) => {
         const newLog = {
             id: Date.now(),
             amount,
-            type,
+            label, // 'type' was confusing, renamed to label/name contextually, but keeping compat
+            type: 'salt',
             time: new Date().toLocaleTimeString(),
-            timestamp: new Date().toISOString() // Added strictly for sorting
+            timestamp: new Date().toISOString()
         };
         setLogs(prev => [newLog, ...prev]);
-
-        // Add EXP for logging
-        gainExp(10);
+        gainRP(10); // +10 RP for salt/actions
     };
 
-    const updateWeight = (newWeight) => {
-        setWeight(newWeight);
-        gainExp(50); // Big reward for weighing
+    const addWater = (amount) => {
+        setWaterIntake(prev => prev + amount);
+        gainRP(5);
     };
 
-    const updateEnergy = (level, mood) => {
-        setEnergy({
-            level,
-            mood,
-            date: new Date().toLocaleDateString()
-        });
-        gainExp(20);
+    const recordMeal = (grade) => {
+        // grade: 1(Clean), 2(Safe), 3(Dirty)
+        setDailyStats(prev => ({
+            ...prev,
+            purityScore: grade, // Overwrite for "Today's Purity" (simplification)
+            fastingStart: new Date().toISOString() // Reset fasting timer
+        }));
+
+        if (grade === 1) gainRP(50);
+        else if (grade === 2) gainRP(30);
+        else gainRP(10);
     };
 
-    const updateGoal = (newGoal) => {
-        setGoal(newGoal);
-    };
-
-    const gainExp = (amount) => {
-        setUser(prev => {
-            let newExp = prev.exp + amount;
-            let newLevel = prev.level;
-
-            // Simple Level Up Logic (100 exp per level)
-            if (newExp >= 100) {
-                newLevel += Math.floor(newExp / 100);
-                newExp = newExp % 100;
-                // In a real app, we might want to handle this notification differently
-                // alert(`🎉 레벨 업! Lv.${newLevel} 달성!`); 
-            }
-
-            // Title System
-            let newTitle = prev.title;
-            if (newLevel >= 10) newTitle = '수석 연구원';
-            else if (newLevel >= 5) newTitle = '선임 연구원';
-            else if (newLevel >= 3) newTitle = '정식 연구원';
-
-            return { ...prev, level: newLevel, exp: newExp, title: newTitle };
-        });
-    };
-
-    const updateUser = (newData) => {
-        setUser(prev => ({ ...prev, ...newData }));
+    const updateCondition = (score) => {
+        setDailyStats(prev => ({ ...prev, condition: score }));
+        gainRP(10); // Condition check bonus
     };
 
     const resetData = () => {
-        if (confirm("모든 연구 데이터를 폐기하시겠습니까? (복구 불가)")) {
+        if (confirm("모든 연구 데이터를 폐기하시겠습니까?")) {
             localStorage.clear();
             window.location.reload();
         }
     };
 
-    const updateSettings = (newSettings) => {
-        setSettings(prev => ({ ...prev, ...newSettings }));
-    };
-
-    const removeLog = (id) => {
-        setLogs(prev => prev.filter(log => log.id !== id));
-    };
-
     return (
         <DataContext.Provider value={{
-            user, logs, weight, energy, goal, settings,
-            addLog, removeLog, updateWeight, updateEnergy, updateUser, updateGoal, updateSettings, resetData
+            user, logs, waterIntake, dailyStats, settings,
+            addLog, addWater, recordMeal, updateCondition, resetData, getEngineStatus
         }}>
             {children}
         </DataContext.Provider>

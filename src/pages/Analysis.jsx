@@ -1,185 +1,173 @@
-import { useState, useRef } from 'react';
-import { Camera, AlertCircle, Loader2 } from 'lucide-react';
-import { useData } from '../context/DataContext';
+import { useState } from 'react';
+import { Activity, AlertTriangle, Droplet, Zap, CheckCircle, RefreshCcw } from 'lucide-react';
 
 const Analysis = () => {
-    const { addLog } = useData();
-    const [image, setImage] = useState(null);
-    const [analyzing, setAnalyzing] = useState(false);
+    const [selectedSymptoms, setSelectedSymptoms] = useState([]);
     const [result, setResult] = useState(null);
-    const fileInputRef = useRef(null);
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            setImage(url);
-            setSelectedFile(file); // Store the file object
-            setResult(null);
-            setError(null); // Clear any previous errors
-        }
+    const symptoms = [
+        { id: 'headache', label: '두통', category: 'salt_deficiency' },
+        { id: 'dizziness', label: '어지러움 (기립성)', category: 'salt_deficiency' },
+        { id: 'fatigue', label: '무기력/피로', category: 'salt_deficiency' },
+        { id: 'brainfog', label: '브레인 포그 (집중력 저하)', category: 'salt_deficiency' },
+        { id: 'thirst', label: '심한 갈증', category: 'dehydration' },
+        { id: 'drymouth', label: '입마름', category: 'dehydration' },
+        { id: 'urine_dark', label: '소변색 진함', category: 'dehydration' },
+        { id: 'cramps', label: '근육 경련/쥐', category: imbalance => 'magnesium_deficiency' },
+        // Simply mapping cramps to salt/magnesium
+        { id: 'palpitations', label: '두근거림', category: 'salt_deficiency' },
+        { id: 'edema', label: '손발 부종', category: 'excess_salt' },
+    ];
+
+    const toggleSymptom = (id) => {
+        setSelectedSymptoms(prev =>
+            prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+        );
+        setResult(null); // Reset result when changing selection
     };
 
-    const startAnalysis = async () => {
-        if (!selectedFile) return;
+    const analyzeSymptoms = () => {
+        if (selectedSymptoms.length === 0) return;
 
-        setAnalyzing(true);
-        setError(null);
+        let saltScore = 0;
+        let waterScore = 0;
+        let excessSaltScore = 0;
 
-        try {
-            // 1. Convert Image to Base64
-            const reader = new FileReader();
-            reader.readAsDataURL(selectedFile);
+        selectedSymptoms.forEach(id => {
+            const sym = symptoms.find(s => s.id === id);
+            if (!sym) return;
 
-            reader.onloadend = async () => {
-                const base64Image = reader.result;
+            if (['headache', 'dizziness', 'fatigue', 'brainfog', 'palpitations', 'cramps'].includes(id)) {
+                saltScore += 1;
+            }
+            if (['thirst', 'drymouth', 'urine_dark'].includes(id)) {
+                waterScore += 1;
+            }
+            if (['edema'].includes(id)) {
+                excessSaltScore += 1;
+            }
+        });
 
-                try {
-                    // 2. Call Backend API
-                    const response = await fetch('/api/analyze', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            image: base64Image,
-                            prompt: `
-                                Analyze this food image for a Keto diet app.
-                                Return ONLY a RAW JSON object (no markdown formatting) with the following structure:
-                                {
-                                    "name": "Food Name (in Korean)",
-                                    "score": 0-100 (integer, high is keto-friendly),
-                                    "macros": { "carb": 0-100, "protein": 0-100, "fat": 0-100 },
-                                    "feedback": "1-2 sentences of feedback in Korean",
-                                    "foods": ["Detected Food 1", "Detected Food 2"]
-                                }
-                            `
-                        })
-                    });
+        let diagnosis = {
+            title: "정상 상태",
+            desc: "특별한 전해질 불균형 신호가 감지되지 않았습니다. 현재 루틴을 유지하세요.",
+            action: "수분/소금 섭취 균형 유지",
+            color: "#4CAF50",
+            icon: CheckCircle
+        };
 
-                    if (!response.ok) {
-                        const errData = await response.json();
-                        throw new Error(errData.details || "Analysis Failed");
-                    }
-
-                    const resultData = await response.json();
-
-                    // 3. Update State
-                    setResult(resultData);
-                    addLog(1.5, `AI 분석 (${resultData.name})`);
-
-                } catch (apiError) {
-                    console.error("API Call Failed:", apiError);
-                    alert(`분석 실패: ${apiError.message}\n(Netlify 환경변수 설정을 확인해주세요)`);
-                    setError(apiError.message);
-                } finally {
-                    setAnalyzing(false);
-                }
+        // Simple Diagnostic Logic
+        if (excessSaltScore > 0 && saltScore === 0) {
+            diagnosis = {
+                title: "나트륨 과다 주의",
+                desc: "부종 등 나트륨 과다 신호가 있습니다. 소금 섭취를 잠시 멈추고 맹물을 드세요.",
+                action: "맹물 500ml 섭취 & 소금 중단",
+                color: "#FF9800",
+                icon: AlertTriangle
             };
-        } catch (e) {
-            console.error("Image Processing Failed:", e);
-            setAnalyzing(false);
-            setError("Image processing failed.");
+        } else if (saltScore >= waterScore && saltScore > 0) {
+            diagnosis = {
+                title: "나트륨 부족 (소금 필요)",
+                desc: "두통, 무기력 등 저나트륨 혈증 초기 증상이 의심됩니다. 즉시 소금을 보충하세요.",
+                action: "소금 2-3g + 물 500ml 섭취",
+                color: "#F44336",
+                icon: Zap
+            };
+        } else if (waterScore > saltScore) {
+            diagnosis = {
+                title: "수분 부족 (탈수)",
+                desc: "갈증과 진한 소변색은 탈수 신호입니다. 소금보다는 '맹물' 위주로 보충하세요.",
+                action: "맹물 300ml 섭취 (천천히)",
+                color: "#2196F3",
+                icon: Droplet
+            };
         }
+
+        setResult(diagnosis);
     };
 
     return (
         <div style={{ paddingBottom: '20px' }}>
             <header style={{ marginBottom: '24px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 800 }}>AI 식단 분석 🥗</h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>사진을 올리면 영양소를 분석해드려요.</p>
+                <h1 style={{ fontSize: '24px', fontWeight: 800 }}>생체 신호 분석 🧬</h1>
+                <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>현재 몸 상태를 체크하여 필요한 성분을 분석합니다.</p>
             </header>
 
-            {/* Upload Area */}
-            <div
-                onClick={() => fileInputRef.current.click()}
-                style={{
-                    width: '100%', height: '300px',
-                    background: image ? `url(${image}) center/cover` : '#F0F4F8',
-                    borderRadius: '24px', border: '2px dashed #CFD8DC',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', marginBottom: '20px', overflow: 'hidden', position: 'relative'
-                }}
-            >
-                {!image && (
-                    <>
-                        <Camera size={48} color="#90A4AE" />
-                        <span style={{ color: '#90A4AE', marginTop: '12px', fontWeight: 600 }}>터치하여 사진 촬영/업로드</span>
-                    </>
-                )}
-                <input
-                    type="file" accept="image/*"
-                    ref={fileInputRef} onChange={handleFileChange} hidden
-                />
+            {/* Symptom Checklist */}
+            <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Activity size={18} color="#FF5722" /> 현재 증상 체크 (다중 선택)
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    {symptoms.map(sym => (
+                        <button key={sym.id} onClick={() => toggleSymptom(sym.id)} style={{
+                            padding: '12px 8px', borderRadius: '12px', border: '1px solid',
+                            borderColor: selectedSymptoms.includes(sym.id) ? 'var(--primary-500)' : '#ECEFF1',
+                            background: selectedSymptoms.includes(sym.id) ? '#E3F2FD' : '#FAFAFA',
+                            color: selectedSymptoms.includes(sym.id) ? 'var(--primary-700)' : '#546E7A',
+                            fontWeight: selectedSymptoms.includes(sym.id) ? 700 : 500,
+                            cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s'
+                        }}>
+                            {sym.label}
+                        </button>
+                    ))}
+                </div>
 
-                {/* Scanning Animation Overlay */}
-                {analyzing && (
-                    <div style={{
-                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                        background: 'rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center', color: 'white'
-                    }}>
-                        <Loader2 size={48} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
-                        <div style={{ marginTop: '16px', fontWeight: 700 }}>AI가 분석 중입니다...</div>
-                    </div>
-                )}
-            </div>
-
-            {/* Action Button */}
-            {image && !result && !analyzing && (
-                <button className="btn-primary" onClick={startAnalysis}>
+                <button onClick={analyzeSymptoms} disabled={selectedSymptoms.length === 0} style={{
+                    width: '100%', marginTop: '20px', padding: '16px', borderRadius: '16px', border: 'none',
+                    background: selectedSymptoms.length > 0 ? 'var(--primary-600)' : '#CFD8DC',
+                    color: 'white', fontWeight: 800, fontSize: '16px', cursor: selectedSymptoms.length > 0 ? 'pointer' : 'not-allowed',
+                    boxShadow: selectedSymptoms.length > 0 ? '0 4px 12px rgba(33, 150, 243, 0.3)' : 'none',
+                    transition: 'all 0.3s'
+                }}>
                     분석 시작하기 ⚡
                 </button>
-            )}
+            </div>
 
-            {/* Result Card */}
+            {/* Diagnosis Result */}
             {result && (
-                <div className="card" style={{ animation: 'slideUp 0.5s ease' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <h2 style={{ fontSize: '20px', fontWeight: 800 }}>분석 결과</h2>
+                <div className="card" style={{
+                    padding: '24px', border: `2px solid ${result.color}`, background: `${result.color}08`,
+                    animation: 'slideUp 0.4s ease'
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '16px' }}>
                         <div style={{
-                            background: result.score >= 80 ? '#E8F5E9' : '#FFF3E0',
-                            color: result.score >= 80 ? '#2E7D32' : '#E65100',
-                            padding: '6px 12px', borderRadius: '20px', fontWeight: 700
+                            width: '60px', height: '60px', borderRadius: '50%', background: result.color,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px',
+                            boxShadow: `0 4px 12px ${result.color}66`
                         }}>
-                            {result.score}점
+                            <result.icon size={32} color="white" />
+                        </div>
+                        <h2 style={{ fontSize: '22px', fontWeight: 800, color: result.color, marginBottom: '8px' }}>
+                            {result.title}
+                        </h2>
+                        <p style={{ fontSize: '14px', color: '#455A64', lineHeight: '1.6', wordBreak: 'keep-all' }}>
+                            {result.desc}
+                        </p>
+                    </div>
+
+                    <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #eee' }}>
+                        <div style={{ fontSize: '12px', color: '#90A4AE', marginBottom: '6px', fontWeight: 700, textTransform: 'uppercase' }}>
+                            Action Plan
+                        </div>
+                        <div style={{ fontSize: '18px', fontWeight: 800, color: '#263238' }}>
+                            {result.action}
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                        {result.foods.map(food => (
-                            <span key={food} style={{ fontSize: '12px', background: '#F5F5F5', padding: '4px 8px', borderRadius: '8px' }}>
-                                {food}
-                            </span>
-                        ))}
-                    </div>
+                    <button onClick={() => { setSelectedSymptoms([]); setResult(null); }} style={{
+                        marginTop: '20px', background: 'transparent', border: 'none', color: '#90A4AE',
+                        fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                        width: '100%', cursor: 'pointer'
+                    }}>
+                        <RefreshCcw size={14} /> 다시 진단하기
+                    </button>
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>탄단지 비율</div>
-                        <div style={{ display: 'flex', height: '12px', borderRadius: '6px', overflow: 'hidden' }}>
-                            <div style={{ width: `${result.macros.carb}%`, background: '#EF5350' }} />
-                            <div style={{ width: `${result.macros.protein}%`, background: '#42A5F5' }} />
-                            <div style={{ width: `${result.macros.fat}%`, background: '#FFCA28' }} />
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px', color: '#666' }}>
-                            <span>탄수화물 {result.macros.carb}%</span>
-                            <span>단백질 {result.macros.protein}%</span>
-                            <span>지방 {result.macros.fat}%</span>
-                        </div>
-                    </div>
-
-                    <div style={{ background: '#F8F9FA', padding: '16px', borderRadius: '16px' }}>
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                            <AlertCircle size={16} color="var(--primary-500)" />
-                            <span style={{ fontWeight: 700, fontSize: '14px' }}>AI 코멘트</span>
-                        </div>
-                        <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#444' }}>{result.feedback}</p>
-                    </div>
+                    <style>{`
+                        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                    `}</style>
                 </div>
             )}
-
-            <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
         </div>
     );
 };
