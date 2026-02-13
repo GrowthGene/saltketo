@@ -16,28 +16,49 @@ export const DataProvider = ({ children }) => {
         }
     };
 
-    const [user, setUser] = useState(() => safeParse('secretLab_user', { name: '김연구원', level: 1, exp: 0 }));
-    const [logs, setLogs] = useState(() => safeParse('secretLab_logs', []));
+    const [user, setUser] = useState(() => safeParse('secretLab_user', {
+        name: '김연구원',
+        level: 1,
+        exp: 0,
+        title: '수습 연구원'
+    }));
+
+    // Ensure logs is always an array
+    const [logs, setLogs] = useState(() => {
+        const parsed = safeParse('secretLab_logs', []);
+        return Array.isArray(parsed) ? parsed : [];
+    });
 
     const [weight, setWeight] = useState(() =>
         Number(localStorage.getItem('secretLab_weight')) || 0.0
     );
 
-    const [condition, setCondition] = useState(() =>
-        localStorage.getItem('secretLab_condition') || null
+    // Renamed 'condition' to 'energy' for Bio-Rhythm Scanner
+    // energy: { level: 0-100, mood: 'text', date: 'YYYY-MM-DD' }
+    const [energy, setEnergy] = useState(() =>
+        safeParse('secretLab_energy', null)
+    );
+
+    const [goal, setGoal] = useState(() =>
+        Number(localStorage.getItem('secretLab_goal')) || 10
     );
 
     // --- Persistence Effects ---
     useEffect(() => { localStorage.setItem('secretLab_user', JSON.stringify(user)); }, [user]);
     useEffect(() => { localStorage.setItem('secretLab_logs', JSON.stringify(logs)); }, [logs]);
     useEffect(() => { localStorage.setItem('secretLab_weight', weight); }, [weight]);
-    useEffect(() => {
-        if (condition) localStorage.setItem('secretLab_condition', condition);
-    }, [condition]);
+    useEffect(() => { localStorage.setItem('secretLab_energy', JSON.stringify(energy)); }, [energy]);
+    useEffect(() => { localStorage.setItem('secretLab_goal', goal); }, [goal]);
 
     // --- Actions ---
     const addLog = (amount, type) => {
-        const newLog = { id: Date.now(), amount, type, time: new Date().toLocaleTimeString() };
+        const newLog = {
+            id: Date.now(),
+            amount,
+            type,
+            time: new Date().toLocaleTimeString(),
+            timestamp: new Date().toISOString() // Added strictly for sorting
+        };
         setLogs(prev => [newLog, ...prev]);
 
         // Add EXP for logging
@@ -49,9 +70,17 @@ export const DataProvider = ({ children }) => {
         gainExp(50); // Big reward for weighing
     };
 
-    const updateCondition = (status) => {
-        setCondition(status);
+    const updateEnergy = (level, mood) => {
+        setEnergy({
+            level,
+            mood,
+            date: new Date().toLocaleDateString()
+        });
         gainExp(20);
+    };
+
+    const updateGoal = (newGoal) => {
+        setGoal(newGoal);
     };
 
     const gainExp = (amount) => {
@@ -63,10 +92,17 @@ export const DataProvider = ({ children }) => {
             if (newExp >= 100) {
                 newLevel += Math.floor(newExp / 100);
                 newExp = newExp % 100;
-                alert(`🎉 레벨 업! Lv.${newLevel} 달성!`);
+                // In a real app, we might want to handle this notification differently
+                // alert(`🎉 레벨 업! Lv.${newLevel} 달성!`); 
             }
 
-            return { ...prev, level: newLevel, exp: newExp };
+            // Title System
+            let newTitle = prev.title;
+            if (newLevel >= 10) newTitle = '수석 연구원';
+            else if (newLevel >= 5) newTitle = '선임 연구원';
+            else if (newLevel >= 3) newTitle = '정식 연구원';
+
+            return { ...prev, level: newLevel, exp: newExp, title: newTitle };
         });
     };
 
@@ -75,7 +111,7 @@ export const DataProvider = ({ children }) => {
     };
 
     const resetData = () => {
-        if (confirm("모든 연구 데이터를 삭제하시겠습니까? (복구 불가)")) {
+        if (confirm("모든 연구 데이터를 폐기하시겠습니까? (복구 불가)")) {
             localStorage.clear();
             window.location.reload();
         }
@@ -83,8 +119,8 @@ export const DataProvider = ({ children }) => {
 
     return (
         <DataContext.Provider value={{
-            user, logs, weight, condition,
-            addLog, updateWeight, updateCondition, updateUser, resetData
+            user, logs, weight, energy, goal,
+            addLog, updateWeight, updateEnergy, updateUser, updateGoal, resetData
         }}>
             {children}
         </DataContext.Provider>

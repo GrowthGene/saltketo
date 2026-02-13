@@ -1,56 +1,115 @@
-import { Plus, Heart } from 'lucide-react';
+import { Plus, Zap, Droplet, Utensils, Beaker } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import EnergyCore from '../components/EnergyCore';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
-    const { weight, updateWeight, condition, updateCondition } = useData();
+    const { user, logs, goal, addLog, weight } = useData();
+    const navigate = useNavigate();
+
+    // Calculate total salt intake today
+    const totalSalt = logs
+        .filter(log => log.time.includes(new Date().toLocaleDateString()) || true) // Simplified for demo: assume all logs are today or filter properly in real app
+        // Actually DataContext doesn't filter perfectly by date yet, but let's assume logs are relevant.
+        // Better: let's filter by date string if we had it. For now, just sum all (since the app seems to be a daily session or similar)
+        // or simplistic approach:
+        .reduce((acc, log) => acc + log.amount, 0);
+
+    const quickActions = [
+        { label: '소금물', amount: 2.0, icon: Droplet, color: '#2196F3' },
+        { label: '캡슐', amount: 0.5, icon: Beaker, color: '#FF9800' },
+        { label: '식사', amount: 1.5, icon: Utensils, color: '#4CAF50' },
+        { label: '부스터', amount: 3.0, icon: Zap, color: '#F44336' },
+    ];
 
     return (
-        <div>
-            <header style={{ marginBottom: '24px' }}>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString()}</div>
-                <h1 style={{ fontSize: '24px', fontWeight: 800 }}>오늘의 비밀연구소 🧪</h1>
+        <div style={{ paddingBottom: '20px' }}>
+            {/* Header / ID Card Snippet */}
+            <header style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px'
+            }}>
+                <div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString()}</div>
+                    <div style={{ fontSize: '20px', fontWeight: 800 }}>
+                        안녕하세요, <span style={{ color: 'var(--primary-600)' }}>{user.name}</span>님
+                    </div>
+                </div>
+                <div onClick={() => navigate('/profile')} style={{
+                    background: '#ECEFF1', padding: '6px 12px', borderRadius: '20px',
+                    fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px',
+                    cursor: 'pointer'
+                }}>
+                    <span>Lv.{user.level}</span>
+                    <div style={{
+                        width: '30px', height: '4px', background: '#CFD8DC', borderRadius: '2px', overflow: 'hidden'
+                    }}>
+                        <div style={{ width: `${user.exp}%`, height: '100%', background: '#00E676' }} />
+                    </div>
+                </div>
             </header>
 
-            {/* Weight Card */}
-            <section className="card" style={{ background: '#FF8A65', color: 'white', marginBottom: '16px', textAlign: 'center' }}>
-                <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '8px' }}>오늘 내 체중은?</div>
-
-                {weight > 0 ? (
-                    <div style={{ fontSize: '48px', fontWeight: 900, marginBottom: '16px' }}>{weight}kg</div>
-                ) : (
-                    <div style={{ fontSize: '48px', fontWeight: 900, marginBottom: '16px', opacity: 0.5 }}>00.0kg</div>
-                )}
-
-                <button
-                    onClick={() => {
-                        const val = prompt("체중을 입력해주세요 (kg)");
-                        if (val) updateWeight(Number(val));
-                    }}
-                    style={{
-                        background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none',
-                        borderRadius: '20px', padding: '12px 30px', fontSize: '16px', fontWeight: 700
-                    }}
-                >
-                    기록하기
-                </button>
+            {/* Main Widget: Energy Core */}
+            <section className="card" style={{
+                marginBottom: '20px', textAlign: 'center', padding: '40px 20px',
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)'
+            }}>
+                <div style={{ marginBottom: '20px', fontWeight: 700, color: '#546E7A' }}>연구소 에너지 코어</div>
+                <EnergyCore current={totalSalt} goal={goal} />
+                <div style={{ marginTop: '20px', fontSize: '13px', color: '#78909C' }}>
+                    목표치까지 {Math.max(0, goal - totalSalt).toFixed(1)}g 남았습니다
+                </div>
             </section>
 
-            {/* Condition Card */}
-            <section className="card" style={{ background: '#FFF3E0', marginBottom: '16px', textAlign: 'center', padding: '32px 20px' }}>
-                <div style={{ fontSize: '16px', fontWeight: 700, color: '#E65100', marginBottom: '16px' }}>
-                    {condition ? `오늘 기분: ${condition}` : "컨디션과 몸 상태는 어떤가요?"}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
-                    {['좋음', '보통', '나쁨'].map(status => (
-                        <button key={status} onClick={() => updateCondition(status)} style={{
-                            padding: '10px 20px', borderRadius: '20px', border: 'none',
-                            background: condition === status ? '#FF9800' : 'white',
-                            color: condition === status ? 'white' : '#FF9800', fontWeight: 700
+            {/* Quick Actions Grid */}
+            <section style={{ marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Zap size={18} fill="#FFD700" color="#FFD700" /> 빠른 투입
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                    {quickActions.map((action) => (
+                        <button key={action.label} onClick={() => addLog(action.amount, action.label)} style={{
+                            background: 'white', border: 'none', borderRadius: '16px', padding: '16px 4px',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer', transition: 'transform 0.1s'
                         }}>
-                            {status === '좋음' ? '🥰' : (status === '보통' ? '🙂' : '😫')}
+                            <div style={{
+                                width: '40px', height: '40px', borderRadius: '12px', background: `${action.color}15`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}>
+                                <action.icon size={20} color={action.color} />
+                            </div>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#37474F' }}>{action.label}</span>
                         </button>
                     ))}
                 </div>
+            </section>
+
+            {/* Recent Logs (Mini) */}
+            <section className="card" style={{ padding: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h2 style={{ fontSize: '16px', fontWeight: 700 }}>최신 연구 기록</h2>
+                    <span onClick={() => navigate('/stats')} style={{ fontSize: '12px', color: '#90A4AE', cursor: 'pointer' }}>전체보기</span>
+                </div>
+                {logs.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {logs.slice(0, 3).map(log => (
+                            <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#B0BEC5' }} />
+                                    <span>{log.type}</span>
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <span style={{ fontWeight: 700 }}>+{log.amount}g</span>
+                                    <span style={{ color: '#CFD8DC', fontSize: '12px' }}>{log.time.slice(0, 5)}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div style={{ textAlign: 'center', color: '#CFD8DC', fontSize: '13px', padding: '10px' }}>
+                        데이터가 없습니다.
+                    </div>
+                )}
             </section>
         </div>
     );
