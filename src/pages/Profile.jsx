@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Settings, LogOut, Award, ChevronRight, Edit2, Save, Activity, FlaskConical } from 'lucide-react';
+import { Settings, LogOut, Award, ChevronRight, Edit2, Save, Activity, FlaskConical, X, Moon, Sun, Bell } from 'lucide-react';
 import { useData } from '../context/DataContext';
 
 const Profile = () => {
-    const { user, updateUser, resetData, goal, updateGoal } = useData();
+    const { user, updateUser, resetData, goal, updateGoal, settings, updateSettings } = useData();
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(user.name);
+    const [showSettings, setShowSettings] = useState(false);
 
     // Derived from user.exp or similar logic
     const nextLevelExp = 100; // Simplified
@@ -23,6 +24,14 @@ const Profile = () => {
         if (newGoal && !isNaN(newGoal)) {
             updateGoal(Number(newGoal));
         }
+    };
+
+    const toggleTheme = () => {
+        updateSettings({ theme: settings.theme === 'light' ? 'dark' : 'light' });
+    };
+
+    const toggleNotifications = () => {
+        updateSettings({ notifications: !settings.notifications });
     };
 
     return (
@@ -145,7 +154,7 @@ const Profile = () => {
                     <ChevronRight size={16} color="#ccc" />
                 </div>
 
-                <div onClick={() => alert('준비 중입니다.')} style={{
+                <div onClick={() => setShowSettings(true)} style={{
                     padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px',
                     borderBottom: '1px solid #f0f0f0', cursor: 'pointer'
                 }}>
@@ -176,6 +185,78 @@ const Profile = () => {
             <div style={{ textAlign: 'center', marginTop: '30px', fontSize: '12px', color: '#ccc' }}>
                 Secret Lab V3.1 (Genesis)
             </div>
+
+            {/* Settings Modal */}
+            {showSettings && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.5)', zIndex: 100,
+                    display: 'flex', alignItems: 'flex-end', justifyContent: 'center'
+                }} onClick={() => setShowSettings(false)}>
+                    <div style={{
+                        background: 'var(--surface)', width: '100%', maxWidth: '480px',
+                        borderTopLeftRadius: '24px', borderTopRightRadius: '24px',
+                        padding: '24px', animation: 'slideUp 0.3s ease-out'
+                    }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                            <h2 style={{ fontSize: '20px', fontWeight: 700 }}>앱 설정</h2>
+                            <div onClick={() => setShowSettings(false)} style={{ padding: '8px', cursor: 'pointer' }}>
+                                <X size={24} />
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ padding: '8px', background: 'var(--background)', borderRadius: '8px' }}>
+                                        {settings.theme === 'light' ? <Sun size={20} color="#FF9800" /> : <Moon size={20} color="#3F51B5" />}
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 600 }}>다크 모드</div>
+                                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{settings.theme === 'light' ? '꺼짐' : '켜짐'}</div>
+                                    </div>
+                                </div>
+                                <div onClick={toggleTheme} style={{
+                                    width: '48px', height: '28px', background: settings.theme === 'light' ? '#E0E0E0' : '#4CAF50',
+                                    borderRadius: '14px', position: 'relative', cursor: 'pointer', transition: 'background 0.2s'
+                                }}>
+                                    <div style={{
+                                        width: '24px', height: '24px', background: 'white', borderRadius: '50%',
+                                        position: 'absolute', top: '2px', left: settings.theme === 'light' ? '2px' : '22px',
+                                        transition: 'left 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    }} />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ padding: '8px', background: 'var(--background)', borderRadius: '8px' }}>
+                                        <Bell size={20} color="#E91E63" />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 600 }}>알림 설정</div>
+                                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>연구 코칭 알림 받기</div>
+                                    </div>
+                                </div>
+                                <div onClick={toggleNotifications} style={{
+                                    width: '48px', height: '28px', background: !settings.notifications ? '#E0E0E0' : '#4CAF50',
+                                    borderRadius: '14px', position: 'relative', cursor: 'pointer', transition: 'background 0.2s'
+                                }}>
+                                    <div style={{
+                                        width: '24px', height: '24px', background: 'white', borderRadius: '50%',
+                                        position: 'absolute', top: '2px', left: !settings.notifications ? '2px' : '22px',
+                                        transition: 'left 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    }} />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: '30px', textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)' }}>
+                            Secret Lab V3.1.2
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

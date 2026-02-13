@@ -1,120 +1,180 @@
-import { useState } from 'react';
-import { Droplet, Cookie, UtensilsCrossed, Soup, Activity } from 'lucide-react';
-import EnergyGauge from '../components/EnergyGauge';
+import { useState, useMemo } from 'react';
+import { Calendar, BarChart2, Trash2, Clock, ChevronRight } from 'lucide-react';
 import { useData } from '../context/DataContext';
 
 const Stats = () => {
-    const { logs, addLog, goal } = useData();
-    const [showExercise, setShowExercise] = useState(false);
+    const { logs, removeLog, goal } = useData();
+    const [range, setRange] = useState('day'); // day, week, month, 6month
 
-    // Safety check and sort logs by timestamp (newest first)
-    const safeLogs = Array.isArray(logs) ? [...logs].sort((a, b) => {
-        // Fallback to ID sorting if timestamp is missing (legacy data)
-        if (b.timestamp && a.timestamp) return new Date(b.timestamp) - new Date(a.timestamp);
-        return b.id - a.id;
-    }) : [];
+    // --- Helper Functions ---
+    const getRangeData = () => {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    const totalSalt = safeLogs
-        .filter(log => log.time.includes(new Date().toLocaleDateString()) || true) // Simplified daily filter
-        .reduce((acc, log) => acc + log.amount, 0);
+        return logs.filter(log => {
+            if (!log.timestamp) return false;
+            const logDate = new Date(log.timestamp);
+            const logDay = new Date(logDate.getFullYear(), logDate.getMonth(), logDate.getDate());
 
-    const percent = Math.min((totalSalt / goal) * 100, 120);
-
-    let statusText = "에너지 충전 중...";
-    if (percent >= 100) statusText = "MAX POWER! ⚡";
-    else if (percent >= 80) statusText = "거의 다 왔어요! 🔥";
-
-    const addExercise = (intensity) => {
-        let salt = 0;
-        let diff = "가볍게";
-        // Exercise actually *depletes* salt/water, but in this gamified logic, 
-        // we might be tracking "Intake needed" or just logging it.
-        // The original code ADDED salt amount. Let's keep it consistent: 
-        // "Exercise completed (Replenishment needed)" -> Adds a log that counts towards the goal? 
-        // Actually, usually exercise MEANS you need MORE salt. 
-        // So adding to the "Intake" log might be confusing if it implies you ATE salt.
-        // But for "Secret Lab" context, maybe we are logging "Activity" which requires "Fuel"?
-        // Let's stick to the original logic: It adds to the log list.
-        if (intensity === 'low') { salt = 0.5; diff = "가볍게"; }
-        if (intensity === 'mid') { salt = 1.0; diff = "적당히"; }
-        if (intensity === 'high') { salt = 2.0; diff = "격하게"; }
-
-        addLog(salt, `운동 (${diff})`);
-        setShowExercise(false);
+            if (range === 'day') {
+                return logDay.getTime() === today.getTime();
+            } else if (range === 'week') {
+                const weekAgo = new Date(today);
+                weekAgo.setDate(today.getDate() - 7);
+                return logDay >= weekAgo;
+            } else if (range === 'month') {
+                const monthAgo = new Date(today);
+                monthAgo.setMonth(today.getMonth() - 1);
+                return logDay >= monthAgo;
+            } else if (range === '6month') {
+                const sixMonthAgo = new Date(today);
+                sixMonthAgo.setMonth(today.getMonth() - 6);
+                return logDay >= sixMonthAgo;
+            }
+            return false;
+        });
     };
+
+    const filteredLogs = useMemo(() => getRangeData(), [logs, range]);
+
+    // Sorting: Newest first
+    const sortedLogs = [...filteredLogs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // Stats Calculation
+    const totalAmount = filteredLogs.reduce((acc, log) => acc + log.amount, 0);
+    const averageAmount = filteredLogs.length > 0 ? (totalAmount / (range === 'day' ? 1 : 7)).toFixed(1) : 0; // Simplified average
+
+    // --- Chart Data Preparation (Simple grouping) ---
+    // Group by Date for Weekly/Monthly view
+    const chartData = useMemo(() => {
+        if (range === 'day') return [];
+
+        const groups = {};
+        filteredLogs.forEach(log => {
+            const dateStr = new Date(log.timestamp).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
+            if (!groups[dateStr]) groups[dateStr] = 0;
+            groups[dateStr] += log.amount;
+        });
+
+        // Fill in missing days? (Optional, skipping for simplicity)
+        return Object.entries(groups).map(([date, amount]) => ({ date, amount })).reverse();
+    }, [filteredLogs, range]);
+
 
     return (
         <div style={{ paddingBottom: '20px' }}>
             <header style={{ marginBottom: '24px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 800 }}>통합 기록 📊</h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>연구 데이터 로그</p>
+                <h1 style={{ fontSize: '24px', fontWeight: 800 }}>데이터 분석 📈</h1>
+                <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>연구 기록 분석 및 관리</p>
             </header>
 
-            <EnergyGauge percent={percent} status={statusText} label={`전해질 에너지 (${totalSalt.toFixed(1)}/${goal}g)`} />
-
-            {/* Exercise Button */}
-            <div className="card" style={{ marginBottom: '20px', marginTop: '20px' }}>
-                <div onClick={() => setShowExercise(!showExercise)} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ background: '#E0F7FA', padding: '8px', borderRadius: '10px' }}>
-                            <Activity size={20} color="#00BCD4" />
-                        </div>
-                        <div>
-                            <div style={{ fontWeight: 700, fontSize: '15px' }}>운동 에너지 소비</div>
-                            <div style={{ fontSize: '12px', color: '#90A4AE' }}>활동량을 기록하여 목표를 조정하세요</div>
-                        </div>
-                    </div>
-                    <div style={{ fontSize: '20px' }}>{showExercise ? '▲' : '▼'}</div>
-                </div>
-
-                {/* Exercise Intensity Selector */}
-                {showExercise && (
-                    <div style={{ marginTop: '16px', display: 'flex', gap: '8px', animation: 'fadeIn 0.3s' }}>
-                        <button onClick={() => addExercise('low')} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd', background: 'white' }}>
-                            <div style={{ fontSize: '20px' }}>🚶</div>
-                            <div style={{ fontSize: '12px', fontWeight: 700 }}>가볍게</div>
-                            <div style={{ fontSize: '10px', color: '#999' }}>+0.5g 필요</div>
-                        </button>
-                        <button onClick={() => addExercise('mid')} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd', background: 'white' }}>
-                            <div style={{ fontSize: '20px' }}>🏃</div>
-                            <div style={{ fontSize: '12px', fontWeight: 700 }}>적당히</div>
-                            <div style={{ fontSize: '10px', color: '#999' }}>+1.0g 필요</div>
-                        </button>
-                        <button onClick={() => addExercise('high')} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd', background: 'white' }}>
-                            <div style={{ fontSize: '20px' }}>🔥</div>
-                            <div style={{ fontSize: '12px', fontWeight: 700 }}>격하게</div>
-                            <div style={{ fontSize: '10px', color: '#999' }}>+2.0g 필요</div>
-                        </button>
-                    </div>
-                )}
+            {/* Range Selector Tabs */}
+            <div style={{
+                display: 'flex', background: '#F5F5F5', borderRadius: '12px', padding: '4px', marginBottom: '24px'
+            }}>
+                {['day', 'week', 'month', '6month'].map(r => (
+                    <button key={r} onClick={() => setRange(r)} style={{
+                        flex: 1, border: 'none', background: range === r ? 'white' : 'transparent',
+                        padding: '8px 0', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                        color: range === r ? 'var(--primary-600)' : '#90A4AE',
+                        boxShadow: range === r ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                        cursor: 'pointer', transition: 'all 0.2s'
+                    }}>
+                        {r === 'day' && '오늘'}
+                        {r === 'week' && '1주일'}
+                        {r === 'month' && '1개월'}
+                        {r === '6month' && '6개월'}
+                    </button>
+                ))}
             </div>
 
-            {/* Log List */}
+            {/* Summary Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+                <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '12px', color: '#90A4AE', marginBottom: '4px' }}>총 섭취량</div>
+                    <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--primary-600)' }}>
+                        {totalAmount.toFixed(1)}<span style={{ fontSize: '14px' }}>g</span>
+                    </div>
+                </div>
+                <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '12px', color: '#90A4AE', marginBottom: '4px' }}>{range === 'day' ? '목표 달성률' : '일일 평균'}</div>
+                    <div style={{ fontSize: '24px', fontWeight: 800, color: '#FF9800' }}>
+                        {range === 'day' ? Math.min((totalAmount / goal) * 100, 100).toFixed(0) + '%' : averageAmount + 'g'}
+                    </div>
+                </div>
+            </div>
+
+            {/* Chart (For Week/Month/6Month) */}
+            {range !== 'day' && (
+                <div className="card" style={{ marginBottom: '24px', minHeight: '200px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <BarChart2 size={16} /> 기간별 섭취 추이
+                    </h3>
+                    {chartData.length > 0 ? (
+                        <div style={{ display: 'flex', alignItems: 'flex-end', height: '150px', gap: '8px', overflowX: 'auto' }}>
+                            {chartData.map((d, i) => (
+                                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: '30px' }}>
+                                    <div style={{
+                                        width: '12px',
+                                        height: `${Math.min((d.amount / goal) * 100, 100)}%`,
+                                        background: d.amount > goal ? '#FF5252' : '#4CAF50',
+                                        borderRadius: '6px',
+                                        marginBottom: '6px'
+                                    }} />
+                                    <div style={{ fontSize: '10px', color: '#ccc', writingMode: 'vertical-rl' }}>{d.date}</div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div style={{ textAlign: 'center', color: '#ccc', padding: '40px' }}>데이터가 부족합니다</div>
+                    )}
+                </div>
+            )}
+
+            {/* Detail List (Log Management) - Always Visible but optimized for Day */}
             <div className="card">
-                <h2 style={{ fontSize: '16px', marginBottom: '16px', fontWeight: 700 }}>오늘의 타임라인</h2>
-                {safeLogs.length === 0 ? (
-                    <div style={{ textAlign: 'center', color: '#999', fontSize: '13px', padding: '20px' }}>
-                        아직 기록된 데이터가 없습니다.<br />홈 화면에서 '빠른 투입'을 진행해주세요.
+                <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Clock size={16} /> {range === 'day' ? '오늘의 타임라인 (관리)' : '상세 기록'}
+                </h3>
+
+                {sortedLogs.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#ccc', padding: '30px', fontSize: '13px' }}>
+                        기록이 없습니다.
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                        {safeLogs.map((log, index) => (
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        {sortedLogs.map((log, index) => (
                             <div key={log.id} style={{
-                                display: 'flex', justifyContent: 'space-between', fontSize: '14px',
-                                padding: '12px 0',
-                                borderBottom: index !== safeLogs.length - 1 ? '1px solid #f0f0f0' : 'none'
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                padding: '12px 0', borderBottom: '1px solid #f0f0f0'
                             }}>
-                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                    <span style={{ color: '#90A4AE', fontSize: '12px', width: '40px' }}>
-                                        {log.time.split(' ')[0]}<br />{log.time.split(' ')[1].slice(0, 5)}
-                                    </span>
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span style={{ fontWeight: 600, color: '#455A64' }}>{log.type}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{
+                                        background: '#ECEFF1', width: '36px', height: '36px', borderRadius: '10px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px'
+                                    }}>
+                                        {log.amount > 0 ? '🧂' : '🏃'}
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#37474F' }}>{log.type}</div>
+                                        <div style={{ fontSize: '12px', color: '#90A4AE' }}>
+                                            {new Date(log.timestamp).toLocaleDateString()} {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
                                     </div>
                                 </div>
-                                <div style={{ fontWeight: 700, color: 'var(--primary-700)' }}>+{log.amount}g</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <span style={{ fontWeight: 700, color: log.amount > 0 ? 'var(--primary-600)' : '#EF5350' }}>
+                                        {log.amount > 0 ? '+' : ''}{log.amount}g
+                                    </span>
+                                    {/* Delete Button available only in 'day' view or for all? User requested delete feature. Better to allow always. */}
+                                    <button onClick={() => { if (confirm('이 기록을 삭제하시겠습니까?')) removeLog(log.id) }} style={{
+                                        background: '#FFEBEE', border: 'none', borderRadius: '8px',
+                                        width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer'
+                                    }}>
+                                        <Trash2 size={14} color="#F44336" />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>

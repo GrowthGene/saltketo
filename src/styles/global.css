@@ -29,6 +29,24 @@
   --ease-spring: cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
+[data-theme='dark'] {
+  --primary-100: #1E293B;
+  --primary-500: #3B82F6;
+  --primary-700: #60A5FA;
+
+  --accent-100: #3D2C1E;
+  --accent-500: #F59E0B;
+  --accent-700: #FBBF24;
+
+  --surface: #1E293B;
+  --background: #0F172A;
+  --text-main: #F1F5F9;
+  --text-muted: #94A3B8;
+
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

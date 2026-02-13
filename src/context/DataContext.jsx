@@ -43,12 +43,21 @@ export const DataProvider = ({ children }) => {
         Number(localStorage.getItem('secretLab_goal')) || 10
     );
 
+    const [settings, setSettings] = useState(() =>
+        safeParse('secretLab_settings', { theme: 'light', notifications: true })
+    );
+
     // --- Persistence Effects ---
     useEffect(() => { localStorage.setItem('secretLab_user', JSON.stringify(user)); }, [user]);
     useEffect(() => { localStorage.setItem('secretLab_logs', JSON.stringify(logs)); }, [logs]);
     useEffect(() => { localStorage.setItem('secretLab_weight', weight); }, [weight]);
     useEffect(() => { localStorage.setItem('secretLab_energy', JSON.stringify(energy)); }, [energy]);
     useEffect(() => { localStorage.setItem('secretLab_goal', goal); }, [goal]);
+    useEffect(() => {
+        localStorage.setItem('secretLab_settings', JSON.stringify(settings));
+        // Apply theme immediately
+        document.documentElement.setAttribute('data-theme', settings.theme);
+    }, [settings]);
 
     // --- Actions ---
     const addLog = (amount, type) => {
@@ -117,10 +126,18 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    const updateSettings = (newSettings) => {
+        setSettings(prev => ({ ...prev, ...newSettings }));
+    };
+
+    const removeLog = (id) => {
+        setLogs(prev => prev.filter(log => log.id !== id));
+    };
+
     return (
         <DataContext.Provider value={{
-            user, logs, weight, energy, goal,
-            addLog, updateWeight, updateEnergy, updateUser, updateGoal, resetData
+            user, logs, weight, energy, goal, settings,
+            addLog, removeLog, updateWeight, updateEnergy, updateUser, updateGoal, updateSettings, resetData
         }}>
             {children}
         </DataContext.Provider>

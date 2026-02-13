@@ -1,4 +1,4 @@
-import { Plus, Zap, Droplet, Utensils, Beaker } from 'lucide-react';
+import { Plus, Zap, Droplet, Utensils, Beaker, Activity } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import EnergyCore from '../components/EnergyCore';
 import { useNavigate } from 'react-router-dom';
@@ -63,9 +63,9 @@ const Home = () => {
             {/* Quick Actions Grid */}
             <section style={{ marginBottom: '24px' }}>
                 <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Zap size={18} fill="#FFD700" color="#FFD700" /> 빠른 투입
+                    <Zap size={18} fill="#FFD700" color="#FFD700" /> 빠른 투입 (에너지 섭취)
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
                     {quickActions.map((action) => (
                         <button key={action.label} onClick={() => addLog(action.amount, action.label)} style={{
                             background: 'white', border: 'none', borderRadius: '16px', padding: '16px 4px',
@@ -81,6 +81,40 @@ const Home = () => {
                             <span style={{ fontSize: '12px', fontWeight: 600, color: '#37474F' }}>{action.label}</span>
                         </button>
                     ))}
+                </div>
+
+                {/* Exercise Section */}
+                <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Activity size={18} color="#FF5722" /> 에너지 소비 (운동)
+                </h2>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={() => addLog(-0.5, '가벼운 운동 (걷기)')} style={{
+                        flex: 1, padding: '12px', borderRadius: '16px', border: 'none', background: 'white',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer'
+                    }}>
+                        <div style={{ fontSize: '20px' }}>🚶</div>
+                        <div style={{ fontSize: '12px', fontWeight: 600 }}>가볍게</div>
+                        <div style={{ fontSize: '10px', color: '#EF5350' }}>-0.5g</div>
+                    </button>
+                    <button onClick={() => addLog(-1.0, '적당한 운동 (조깅)')} style={{
+                        flex: 1, padding: '12px', borderRadius: '16px', border: 'none', background: 'white',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer'
+                    }}>
+                        <div style={{ fontSize: '20px' }}>🏃</div>
+                        <div style={{ fontSize: '12px', fontWeight: 600 }}>적당히</div>
+                        <div style={{ fontSize: '10px', color: '#EF5350' }}>-1.0g</div>
+                    </button>
+                    <button onClick={() => addLog(-2.0, '격한 운동 (웨이트)')} style={{
+                        flex: 1, padding: '12px', borderRadius: '16px', border: 'none', background: 'white',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer'
+                    }}>
+                        <div style={{ fontSize: '20px' }}>🔥</div>
+                        <div style={{ fontSize: '12px', fontWeight: 600 }}>격하게</div>
+                        <div style={{ fontSize: '10px', color: '#EF5350' }}>-2.0g</div>
+                    </button>
                 </div>
             </section>
 
