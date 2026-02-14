@@ -124,6 +124,10 @@ const Home = () => {
                                     alert('🍛 일반 식사 기록.');
                                 } else {
                                     addLog(action.amount, action.label);
+                                    // If Salt Water 500ml, also add water
+                                    if (action.label === '소금물 500ml') {
+                                        addWater(500);
+                                    }
                                 }
                             }}
                             style={{
