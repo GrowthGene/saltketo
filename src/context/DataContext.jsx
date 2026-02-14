@@ -140,12 +140,79 @@ export const DataProvider = ({ children }) => {
         return { status: 'idle', color: '#90A4AE', message: '엔진 대기 상태' };
     };
 
+    // --- Notification Logic ---
+    const requestNotificationPermission = async () => {
+        if (!('Notification' in window)) return false;
+        if (Notification.permission === 'granted') return true;
+        const permission = await Notification.requestPermission();
+        return permission === 'granted';
+    };
+
+    const sendNotification = (title, body) => {
+        if (settings.notifications && Notification.permission === 'granted') {
+            new Notification(title, { body, icon: '/favicon.ico' }); // Assuming favicon exists
+        }
+    };
+
+    // Track previous status to detect upgrades
+    const [prevStatus, setPrevStatus] = useState('idle');
+    const [goalReachedNotified, setGoalReachedNotified] = useState(false);
+
+    useEffect(() => {
+        if (!settings.notifications) return;
+
+        const currentStatus = getEngineStatus();
+
+        // 1. Engine Status Upgrade Check
+        const statusOrder = ['idle', 'warming', 'burning'];
+        const prevIndex = statusOrder.indexOf(prevStatus);
+        const currIndex = statusOrder.indexOf(currentStatus.status);
+
+        if (currIndex > prevIndex) {
+            sendNotification(
+                `🔥 ${currentStatus.status === 'burning' ? '엔진 풀가동!' : '엔진 예열 완료!'}`,
+                currentStatus.message
+            );
+        }
+        setPrevStatus(currentStatus.status);
+
+        // 2. Goal Achievement Check
+        // Calculate Salt Intake (Positive logs only)
+        const todayLogs = logs.filter(l => {
+            if (!l.timestamp) return false;
+            return new Date(l.timestamp).toLocaleDateString() === new Date().toLocaleDateString();
+        });
+        const todaySalt = todayLogs
+            .reduce((sum, log) => sum + (log.type !== 'water' && log.amount > 0 ? log.amount : 0), 0);
+
+        // If we crossed the goal and haven't notified yet today
+        if (todaySalt >= goal && !goalReachedNotified && goal > 0) {
+            sendNotification("🎉 목표 달성!", `오늘의 소금 섭취 목표 ${goal}g을 달성했습니다!`);
+            setGoalReachedNotified(true);
+        }
+
+        // Reset notification flag if new day (handled loosely here, better in daily reset logic)
+        // But for reactiveness, if salt drops below goal (e.g. log deletion), reset? 
+        // Let's reset if intake < goal.
+        if (todaySalt < goal) {
+            setGoalReachedNotified(false);
+        }
+
+    }, [logs, settings.notifications, goal]); // Re-run when logs change
+
     // --- Actions ---
     const updateUser = (updates) => {
         setUser(prev => ({ ...prev, ...updates }));
     };
 
-    const updateSettings = (updates) => {
+    const updateSettings = async (updates) => {
+        if (updates.notifications === true) {
+            const granted = await requestNotificationPermission();
+            if (!granted) {
+                alert("알림 권한이 차단되어 있습니다. 브라우저 설정에서 권한을 허용해주세요.");
+                return; // Don't enable if denied
+            }
+        }
         setSettings(prev => ({ ...prev, ...updates }));
     };
 
