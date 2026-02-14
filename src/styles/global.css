@@ -2,13 +2,14 @@
   /* Secret Lab Palette */
   --primary-100: #E3F2FD;
   --primary-500: #2196F3;
+  --primary-600: #1E88E5;
   --primary-700: #1565C0;
 
   --accent-100: #FFF3E0;
   --accent-500: #FF9800;
   --accent-700: #F57C00;
 
-  --surface: #FFFFFF;
+  --surface: rgba(255, 255, 255, 0.9);
   --background: #F8F9FA;
   --text-main: #1A1D1E;
   --text-muted: #6C757D;
@@ -32,13 +33,14 @@
 [data-theme='dark'] {
   --primary-100: #1E293B;
   --primary-500: #3B82F6;
+  --primary-600: #2563EB;
   --primary-700: #60A5FA;
 
   --accent-100: #3D2C1E;
   --accent-500: #F59E0B;
   --accent-700: #FBBF24;
 
-  --surface: #1E293B;
+  --surface: rgba(30, 41, 59, 0.9);
   --background: #0F172A;
   --text-main: #F1F5F9;
   --text-muted: #94A3B8;
@@ -78,7 +80,7 @@ body {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
-  background: white;
+  background: var(--background);
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
@@ -91,11 +93,12 @@ body {
   padding: 24px;
   box-shadow: var(--shadow-soft);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  /* Glass effect for cards */
-  background: rgba(255, 255, 255, 0.9);
+  /* Glass effect for cards - Adjusted for Dark Mode compatibility */
+  background: var(--surface);
+  /* Fallback */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .card:active {
