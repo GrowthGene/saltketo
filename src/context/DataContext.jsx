@@ -92,16 +92,23 @@ export const DataProvider = ({ children }) => {
 
     // 2. Engine Status Algorithm
     // Returns: 'idle', 'warming', 'burning', 'overheat' (warning)
+    // Returns: 'idle', 'warming', 'burning', 'overheat' (warning)
     const getEngineStatus = () => {
         const SALT_GOAL = goal; // Use dynamic goal
 
-        // Calculate Salt Intake from Logs
-        const todaySalt = logs
-            .filter(l => {
-                if (!l.timestamp) return false;
-                return new Date(l.timestamp).toLocaleDateString() === new Date().toLocaleDateString();
-            })
-            .reduce((sum, log) => sum + (log.type !== 'water' ? log.amount : 0), 0);
+        // Filter today's logs
+        const todayLogs = logs.filter(l => {
+            if (!l.timestamp) return false;
+            return new Date(l.timestamp).toLocaleDateString() === new Date().toLocaleDateString();
+        });
+
+        // Calculate Salt Intake (Positive logs only)
+        const todaySalt = todayLogs
+            .reduce((sum, log) => sum + (log.type !== 'water' && log.amount > 0 ? log.amount : 0), 0);
+
+        // Calculate Activity Points (Negative logs -> Absolute value)
+        const activityPoints = todayLogs
+            .reduce((sum, log) => sum + (log.amount < 0 ? Math.abs(log.amount) : 0), 0);
 
         const saltRatio = Math.min(todaySalt / SALT_GOAL, 1.5); // Cap at 150%
         const purity = dailyStats.purityScore; // 1(High), 2(Med), 3(Low/Dirty)
@@ -124,6 +131,9 @@ export const DataProvider = ({ children }) => {
 
         score += (saltRatio * 30); // Max 30-45 points
         if (fastingHours > 12) score += 20;
+
+        // Add Activity Bonus (e.g., 20 points per 1g of salt burned/exercise)
+        score += (activityPoints * 20);
 
         if (score >= 80) return { status: 'burning', color: '#448AFF', message: '지방 연소 엔진 풀가동! 🔥' };
         if (score >= 40) return { status: 'warming', color: '#FFCA28', message: '대사 엔진 예열 중...' };
