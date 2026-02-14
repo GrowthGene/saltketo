@@ -46,7 +46,9 @@ const Home = () => {
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px'
             }}>
                 <div>
-                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString()}</div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                        {new Date().toLocaleDateString()} <span style={{ opacity: 0.5 }}>v3.1</span>
+                    </div>
                     <div style={{ fontSize: '20px', fontWeight: 800 }}>
                         <span style={{ color: 'var(--primary-600)' }}>{user.title}</span> {user.name}님
                     </div>
