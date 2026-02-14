@@ -147,6 +147,10 @@ export const DataProvider = ({ children }) => {
         gainRP(5);
     };
 
+    const removeLog = (id) => {
+        setLogs(prev => prev.filter(log => log.id !== id));
+    };
+
     const recordMeal = (grade) => {
         // grade: 1(Clean), 2(Safe), 3(Dirty)
         setDailyStats(prev => ({
@@ -175,7 +179,7 @@ export const DataProvider = ({ children }) => {
     return (
         <DataContext.Provider value={{
             user, logs, waterIntake, dailyStats, settings,
-            addLog, addWater, recordMeal, updateCondition, resetData, getEngineStatus
+            addLog, addWater, recordMeal, updateCondition, resetData, getEngineStatus, removeLog
         }}>
             {children}
         </DataContext.Provider>
