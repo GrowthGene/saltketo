@@ -89,12 +89,16 @@ const Home = () => {
                         </div>
                     </div>
                 </div>
-                <button onClick={() => addWater(250)} style={{
-                    background: '#03A9F4', color: 'white', border: 'none', borderRadius: '12px',
-                    padding: '8px 16px', fontWeight: 700, fontSize: '13px', cursor: 'pointer'
-                }}>
-                    + 물 250ml
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => addWater(-250)} style={{
+                        background: '#FFEBEE', color: '#F44336', border: 'none', borderRadius: '12px',
+                        padding: '8px 12px', fontWeight: 700, fontSize: '13px', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '4px'
+                    }}>
+                        <span>-250ml</span>
+                    </button>
+                    {/* +250ml is in the grid below */}
+                </div>
             </div>
 
             {/* Quick Actions Grid */}
@@ -216,7 +220,7 @@ const Home = () => {
                     </div>
                 )}
             </section>
-        </div>
+        </div >
     );
 };
 
