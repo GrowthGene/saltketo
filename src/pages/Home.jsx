@@ -19,7 +19,12 @@ const Home = () => {
 
     // Calculate total salt intake today
     const totalSalt = logs
-        .filter(log => log.time.includes(new Date().toLocaleDateString()) || true)
+        .filter(log => {
+            if (!log.timestamp) return false;
+            const logDate = new Date(log.timestamp).toLocaleDateString();
+            const today = new Date().toLocaleDateString();
+            return logDate === today;
+        })
         .reduce((acc, log) => acc + log.amount, 0);
 
     const quickActions = [

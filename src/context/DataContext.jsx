@@ -97,7 +97,10 @@ export const DataProvider = ({ children }) => {
 
         // Calculate Salt Intake from Logs
         const todaySalt = logs
-            .filter(l => l.time.includes(new Date().toLocaleTimeString().slice(0, 2)) || true) // Simplified
+            .filter(l => {
+                if (!l.timestamp) return false;
+                return new Date(l.timestamp).toLocaleDateString() === new Date().toLocaleDateString();
+            })
             .reduce((sum, log) => sum + (log.type !== 'water' ? log.amount : 0), 0);
 
         const saltRatio = Math.min(todaySalt / SALT_GOAL, 1.5); // Cap at 150%

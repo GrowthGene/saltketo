@@ -42,7 +42,8 @@ const Stats = () => {
 
     // Stats Calculation
     const totalAmount = filteredLogs.reduce((acc, log) => acc + log.amount, 0);
-    const averageAmount = filteredLogs.length > 0 ? (totalAmount / (range === 'day' ? 1 : 7)).toFixed(1) : 0; // Simplified average
+    const divisors = { day: 1, week: 7, month: 30, '6month': 180 };
+    const averageAmount = filteredLogs.length > 0 ? (totalAmount / divisors[range]).toFixed(1) : 0;
 
     // --- Chart Data Preparation (Simple grouping) ---
     // Group by Date for Weekly/Monthly view
