@@ -4,15 +4,22 @@ import EnergyCore from '../components/EnergyCore';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
-    const { user, logs, goal, addLog, weight } = useData();
+    const { 
+        user, 
+        logs, 
+        addLog,
+        addWater,
+        waterIntake,
+        recordMeal,
+        getEngineStatus 
+    } = useData();
+    
     const navigate = useNavigate();
+    const GOAL = 10; // Daily Salt Goal
 
     // Calculate total salt intake today
     const totalSalt = logs
-        .filter(log => log.time.includes(new Date().toLocaleDateString()) || true) // Simplified for demo: assume all logs are today or filter properly in real app
-        // Actually DataContext doesn't filter perfectly by date yet, but let's assume logs are relevant.
-        // Better: let's filter by date string if we had it. For now, just sum all (since the app seems to be a daily session or similar)
-        // or simplistic approach:
+        .filter(log => log.time.includes(new Date().toLocaleDateString()) || true) 
         .reduce((acc, log) => acc + log.amount, 0);
 
     const quickActions = [
@@ -22,7 +29,7 @@ const Home = () => {
         { label: '부스터', amount: 3.0, icon: Zap, color: '#F44336' },
     ];
 
-    const statusData = useData().getEngineStatus ? useData().getEngineStatus() : { status: 'idle', color: '#90A4AE', message: '로딩중...' };
+    const statusData = getEngineStatus ? getEngineStatus() : { status: 'idle', color: '#90A4AE', message: '로딩중...' };
     const statusMsg = statusData.message;
 
     return (
@@ -60,7 +67,7 @@ const Home = () => {
                 </div>
                 <EnergyCore percentage={statusData.status === 'burning' ? 100 : statusData.status === 'warming' ? 60 : 20} status={statusData.status} color={statusData.color} />
                 <div style={{ marginTop: '20px', fontSize: '13px', color: '#78909C' }}>
-                    목표치까지 {Math.max(0, goal - totalSalt).toFixed(1)}g 남았습니다
+                    목표치까지 {Math.max(0, GOAL - totalSalt).toFixed(1)}g 남았습니다
                 </div>
             </section>
 
@@ -73,11 +80,11 @@ const Home = () => {
                     <div>
                         <div style={{ fontSize: '12px', color: '#78909C', fontWeight: 600 }}>순수 수분 섭취 (맹물)</div>
                         <div style={{ fontSize: '20px', fontWeight: 800, color: '#0288D1' }}>
-                            {useData().waterIntake} <span style={{ fontSize: '14px' }}>ml</span>
+                            {waterIntake} <span style={{ fontSize: '14px' }}>ml</span>
                         </div>
                     </div>
                 </div>
-                <button onClick={() => useData().addWater(250)} style={{
+                <button onClick={() => addWater(250)} style={{
                     background: '#03A9F4', color: 'white', border: 'none', borderRadius: '12px',
                     padding: '8px 16px', fontWeight: 700, fontSize: '13px', cursor: 'pointer'
                 }}>
@@ -101,10 +108,10 @@ const Home = () => {
                         <button key={action.label}
                             onClick={() => {
                                 if (action.type === 'meal_clean') {
-                                    useData().recordMeal(1);
+                                    recordMeal(1);
                                     alert('🥗 클린 식단 기록! (엔진 효율 상승)');
                                 } else if (action.type === 'meal_safe') {
-                                    useData().recordMeal(2);
+                                    recordMeal(2);
                                     alert('🍛 일반 식사 기록.');
                                 } else {
                                     addLog(action.amount, action.label);
