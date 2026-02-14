@@ -151,20 +151,26 @@ const Stats = () => {
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                     <div style={{
-                                        background: '#ECEFF1', width: '36px', height: '36px', borderRadius: '10px',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px'
+                                        background: log.type === 'exercise' ? '#E3F2FD' : log.type === 'meal' ? '#E8F5E9' : '#ECEFF1',
+                                        width: '36px', height: '36px', borderRadius: '10px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px'
                                     }}>
-                                        {log.amount > 0 ? '🧂' : '🏃'}
+                                        {log.type === 'exercise' ? '🏃' : log.type === 'meal' ? '🍽️' : '🧂'}
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#37474F' }}>{log.type}</div>
+                                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#37474F' }}>
+                                            {log.label || (log.type === 'exercise' ? '운동' : '소금 섭취')}
+                                        </div>
                                         <div style={{ fontSize: '12px', color: '#90A4AE' }}>
-                                            {new Date(log.timestamp).toLocaleDateString()} {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <span style={{ fontWeight: 700, color: log.amount > 0 ? 'var(--primary-600)' : '#EF5350' }}>
+                                    <span style={{
+                                        fontWeight: 700,
+                                        color: log.amount > 0 ? 'var(--primary-600)' : log.amount < 0 ? '#1976D2' : '#78909C'
+                                    }}>
                                         {log.amount > 0 ? '+' : ''}{log.amount}g
                                     </span>
                                     {/* Delete Button available only in 'day' view or for all? User requested delete feature. Better to allow always. */}

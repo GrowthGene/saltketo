@@ -153,17 +153,21 @@ export const DataProvider = ({ children }) => {
         setUser(prev => ({ ...prev, goalWeight: newGoal }));
     };
 
-    const addLog = (amount, label) => {
+    const addLog = (amount, label, type = 'salt') => {
         const newLog = {
             id: Date.now(),
             amount,
-            label, // 'type' was confusing, renamed to label/name contextually, but keeping compat
-            type: 'salt',
+            label,
+            type, // 'salt', 'meal', 'exercise'
             time: new Date().toLocaleTimeString(),
             timestamp: new Date().toISOString()
         };
         setLogs(prev => [newLog, ...prev]);
-        gainRP(10); // +10 RP for salt/actions
+
+        // RP Logic based on type
+        if (type === 'salt') gainRP(10);
+        if (type === 'exercise') gainRP(20);
+        if (type === 'meal') gainRP(5);
     };
 
     const addWater = (amount) => {
@@ -182,6 +186,10 @@ export const DataProvider = ({ children }) => {
             purityScore: grade, // Overwrite for "Today's Purity" (simplification)
             fastingStart: new Date().toISOString() // Reset fasting timer
         }));
+
+        // Log the meal event
+        const label = grade === 1 ? '클린 키토식' : grade === 2 ? '일반 식사' : '치팅/가공식';
+        addLog(0, label, 'meal');
 
         if (grade === 1) gainRP(50);
         else if (grade === 2) gainRP(30);

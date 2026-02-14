@@ -142,34 +142,42 @@ const Home = () => {
                 <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Activity size={18} color="#FF5722" /> 에너지 소비 (운동)
                 </h2>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <button onClick={() => addLog(-0.5, '가벼운 운동 (걷기)')} style={{
-                        flex: 1, padding: '12px', borderRadius: '16px', border: 'none', background: 'white',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer'
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    {quickActions.map((action, idx) => (
+                        <button key={idx} onClick={() => addLog(action.amount, action.label, 'salt')} style={{
+                            padding: '16px', borderRadius: '16px', border: 'none', background: '#F5F5F5',
+                            fontSize: '15px', fontWeight: 600, color: '#37474F', cursor: 'pointer',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                        }}>
+                            <span>{action.label}</span>
+                            <span style={{ color: '#FF7043' }}>+{action.amount}g</span>
+                        </button>
+                    ))}
+                </div>
+            </section>
+
+            {/* Exercise & Water - Updated for V3 */}
+            <section style={{ marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '16px', color: '#263238' }}>에너지 소비 & 수분</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <button onClick={() => addLog(-0.5, '가벼운 걷기/유산소', 'exercise')} style={{
+                        padding: '20px', borderRadius: '16px', border: 'none', background: '#E3F2FD',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer'
                     }}>
-                        <div style={{ fontSize: '20px' }}>🚶</div>
-                        <div style={{ fontSize: '12px', fontWeight: 600 }}>가볍게</div>
-                        <div style={{ fontSize: '10px', color: '#EF5350' }}>-0.5g</div>
+                        <Zap size={24} color="#2196F3" />
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#1565C0' }}>운동 (-0.5g)</span>
                     </button>
-                    <button onClick={() => addLog(-1.0, '적당한 운동 (조깅)')} style={{
-                        flex: 1, padding: '12px', borderRadius: '16px', border: 'none', background: 'white',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer'
+                    <button onClick={() => addWater(250)} style={{
+                        padding: '20px', borderRadius: '16px', border: 'none', background: '#E0F7FA',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer'
                     }}>
-                        <div style={{ fontSize: '20px' }}>🏃</div>
-                        <div style={{ fontSize: '12px', fontWeight: 600 }}>적당히</div>
-                        <div style={{ fontSize: '10px', color: '#EF5350' }}>-1.0g</div>
+                        <Droplet size={24} color="#00BCD4" />
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#00838F' }}>물 한잔 (+250ml)</span>
                     </button>
-                    <button onClick={() => addLog(-2.0, '격한 운동 (웨이트)')} style={{
-                        flex: 1, padding: '12px', borderRadius: '16px', border: 'none', background: 'white',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer'
-                    }}>
-                        <div style={{ fontSize: '20px' }}>🔥</div>
-                        <div style={{ fontSize: '12px', fontWeight: 600 }}>격하게</div>
-                        <div style={{ fontSize: '10px', color: '#EF5350' }}>-2.0g</div>
-                    </button>
+                </div>
+                <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px', color: '#90A4AE' }}>
+                    오늘 마신 물: <b style={{ color: '#00BCD4' }}>{waterIntake}ml</b>
                 </div>
             </section>
 
