@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Settings, LogOut, Award, ChevronRight, Edit2, Save, Activity, FlaskConical, X, Moon, Sun, Bell } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { getBadges } from '../utils/badgeLogic';
 
 const Profile = () => {
-    const { user, updateUser, resetData, goal, updateGoal, settings, updateSettings } = useData();
+    const { user, updateUser, resetData, goal, updateGoal, settings, updateSettings, logs, waterIntake, dailyStats, getEngineStatus } = useData();
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(user.name);
     const [showSettings, setShowSettings] = useState(false);
@@ -40,6 +41,10 @@ const Profile = () => {
     const toggleNotifications = () => {
         updateSettings({ notifications: !settings.notifications });
     };
+
+    // Calculate Badges
+    const engineStatus = getEngineStatus ? getEngineStatus().status : 'idle';
+    const badges = getBadges(logs, waterIntake, dailyStats, goal, user, engineStatus);
 
     return (
         <div style={{ paddingBottom: '20px' }}>
@@ -120,28 +125,20 @@ const Profile = () => {
                     <Award size={18} color="#FFD700" /> 임상 시험 배지
                 </h2>
                 <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
-                    {/* Mock Badges */}
-                    {[
-                        { name: '신입 연구원', desc: '첫 기록 달성', color: '#B0BEC5', icon: '🧪' },
-                        { name: '작심삼일 돌파', desc: '3일 연속 기록', color: '#FFB74D', icon: '🔥' },
-                        { name: '설탕 제거', desc: '임상 시험 완료', color: '#81C784', icon: '🍬' },
-                    ].map((badge, i) => (
-                        <div key={i} style={{
+                    {badges.map((badge) => (
+                        <div key={badge.id} style={{
                             minWidth: '100px', padding: '12px', borderRadius: '12px', background: '#F8F9FA',
                             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                            border: '1px solid #eee'
+                            border: '1px solid #eee',
+                            opacity: badge.unlocked ? 1 : 0.5,
+                            filter: badge.unlocked ? 'none' : 'grayscale(100%)',
+                            transition: 'all 0.3s'
                         }}>
-                            <div style={{ fontSize: '24px' }}>{badge.icon}</div>
+                            <div style={{ fontSize: '24px' }}>{badge.unlocked ? badge.icon : '🔒'}</div>
                             <div style={{ fontSize: '12px', fontWeight: 700, color: '#455A64' }}>{badge.name}</div>
                             <div style={{ fontSize: '10px', color: '#90A4AE' }}>{badge.desc}</div>
                         </div>
                     ))}
-                    <div style={{
-                        minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '12px', color: '#ccc', border: '2px dashed #eee', borderRadius: '12px'
-                    }}>
-                        + 더보기
-                    </div>
                 </div>
             </div>
 
