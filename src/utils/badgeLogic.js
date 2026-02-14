@@ -51,10 +51,10 @@ export const getBadges = (logs, waterIntake, dailyStats, goal, user, engineStatu
         {
             id: 'clean_eater',
             name: '클린 식단 전문가',
-            desc: '클린 키토식 10회',
+            desc: '클린 식사 10회',
             icon: '🥗',
             color: '#66BB6A',
-            condition: () => logs.filter(l => l.label === '클린 키토식').length >= 10
+            condition: () => logs.filter(l => l.label === '클린 식사').length >= 10
         },
         {
             id: 'engine_burning',

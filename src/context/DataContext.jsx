@@ -255,7 +255,7 @@ export const DataProvider = ({ children }) => {
         }));
 
         // Log the meal event
-        const label = grade === 1 ? '클린 키토식' : grade === 2 ? '일반 식사' : '치팅/가공식';
+        const label = grade === 1 ? '클린 식사' : grade === 2 ? '일반 식사' : '치팅/가공식';
         const saltAmount = grade === 2 ? 3 : 0; // 3g for General Meal
         addLog(saltAmount, label, 'meal');
 

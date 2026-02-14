@@ -111,7 +111,7 @@ const Home = () => {
                     {[
                         { label: '소금물 500ml', amount: 0.5, icon: Droplet, color: '#29B6F6', type: 'salt' },
                         { label: '소금 캡슐', amount: 1.0, icon: Beaker, color: '#AB47BC', type: 'salt' },
-                        { label: '클린 식단', amount: 0, icon: Utensils, color: '#66BB6A', type: 'meal_clean' },
+                        { label: '클린 식사', amount: 0, icon: Utensils, color: '#66BB6A', type: 'meal_clean' },
                         { label: '일반 식사', amount: 0, icon: Utensils, color: '#FFCA28', type: 'meal_safe' },
                     ].map((action) => (
                         <button key={action.label}
@@ -208,7 +208,7 @@ const Home = () => {
                                     <span>
                                         {log.type === 'salt' ? '소금' :
                                             log.type === 'exercise' ? '운동' :
-                                                log.type === 'meal' ? '식사' : log.type}
+                                                log.type === 'meal' ? log.label : log.type}
                                     </span>
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px' }}>
