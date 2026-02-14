@@ -197,7 +197,11 @@ const Home = () => {
                             <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                                     <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#B0BEC5' }} />
-                                    <span>{log.type}</span>
+                                    <span>
+                                        {log.type === 'salt' ? '소금' :
+                                            log.type === 'exercise' ? '운동' :
+                                                log.type === 'meal' ? '식사' : log.type}
+                                    </span>
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <span style={{ fontWeight: 700 }}>{log.amount > 0 ? '+' : ''}{log.amount}g</span>
