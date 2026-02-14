@@ -1,7 +1,9 @@
-import { Plus, Zap, Droplet, Utensils, Beaker, Activity } from 'lucide-react';
-import { useData } from '../context/DataContext';
-import EnergyCore from '../components/EnergyCore';
 import { useNavigate } from 'react-router-dom';
+import { Droplet, Plus, Minus, Battery, Activity, Flame, Utensils, Beaker, Zap } from 'lucide-react';
+import { useData } from '../context/DataContext';
+import { motion } from 'framer-motion';
+import EnergyCore from '../components/EnergyCore';
+
 
 const Home = () => {
     const {
@@ -79,8 +81,36 @@ const Home = () => {
             {/* Water Tracking Display */}
             <div className="card" style={{ padding: '16px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ background: '#E1F5FE', padding: '10px', borderRadius: '12px' }}>
-                        <Droplet size={24} color="#03A9F4" />
+                    <div style={{ background: '#E1F5FE', padding: '10px', borderRadius: '12px', position: 'relative', overflow: 'hidden', width: '44px', height: '44px' }}>
+                        <motion.div
+                            animate={{
+                                top: `${100 - Math.min((waterIntake / 2000) * 100, 100)}%`,
+                                rotate: [0, 360]
+                            }}
+                            transition={{
+                                top: { type: "spring", stiffness: 20 },
+                                rotate: { duration: 5, repeat: Infinity, ease: "linear" }
+                            }}
+                            style={{
+                                position: 'absolute', left: '-50%', width: '200%', height: '200%',
+                                background: 'rgba(3, 169, 244, 0.3)', borderRadius: '40%',
+                            }}
+                        />
+                        <motion.div
+                            animate={{
+                                top: `${100 - Math.min((waterIntake / 2000) * 100, 100) + 10}%`,
+                                rotate: [0, -360]
+                            }}
+                            transition={{
+                                top: { type: "spring", stiffness: 30 },
+                                rotate: { duration: 7, repeat: Infinity, ease: "linear" }
+                            }}
+                            style={{
+                                position: 'absolute', left: '-50%', width: '200%', height: '200%',
+                                background: 'rgba(3, 169, 244, 0.5)', borderRadius: '45%',
+                            }}
+                        />
+                        <Droplet size={24} color="#0277BD" style={{ position: 'relative', zIndex: 1 }} />
                     </div>
                     <div>
                         <div style={{ fontSize: '12px', color: '#78909C', fontWeight: 600 }}>순수 수분 섭취 (맹물)</div>
