@@ -137,42 +137,46 @@ const Home = () => {
                         </button>
                     ))}
                 </div>
-
-                {/* Exercise Section */}
-                <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Activity size={18} color="#FF5722" /> 에너지 소비 (운동)
-                </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    {quickActions.map((action, idx) => (
-                        <button key={idx} onClick={() => addLog(action.amount, action.label, 'salt')} style={{
-                            padding: '16px', borderRadius: '16px', border: 'none', background: '#F5F5F5',
-                            fontSize: '15px', fontWeight: 600, color: '#37474F', cursor: 'pointer',
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                        }}>
-                            <span>{action.label}</span>
-                            <span style={{ color: '#FF7043' }}>+{action.amount}g</span>
-                        </button>
-                    ))}
-                </div>
             </section>
 
             {/* Exercise & Water - Updated for V3 */}
             <section style={{ marginBottom: '24px' }}>
                 <h2 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '16px', color: '#263238' }}>에너지 소비 & 수분</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <button onClick={() => addLog(-0.5, '가벼운 걷기/유산소', 'exercise')} style={{
+
+                    {/* Exercise Level 1: Light */}
+                    <button onClick={() => addLog(-0.5, '가벼운 산책', 'exercise')} style={{
                         padding: '20px', borderRadius: '16px', border: 'none', background: '#E3F2FD',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer'
                     }}>
-                        <Zap size={24} color="#2196F3" />
-                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#1565C0' }}>운동 (-0.5g)</span>
+                        <div style={{ fontSize: '24px' }}>🚶</div>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#1565C0' }}>가벼운 산책 (-0.5g)</span>
                     </button>
+
+                    {/* Exercise Level 2: Moderate */}
+                    <button onClick={() => addLog(-1.0, '중강도 운동', 'exercise')} style={{
+                        padding: '20px', borderRadius: '16px', border: 'none', background: '#E3F2FD',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer'
+                    }}>
+                        <div style={{ fontSize: '24px' }}>🏃</div>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#1565C0' }}>중강도 운동 (-1.0g)</span>
+                    </button>
+
+                    {/* Exercise Level 3: Intense */}
+                    <button onClick={() => addLog(-2.0, '고강도 운동', 'exercise')} style={{
+                        padding: '20px', borderRadius: '16px', border: 'none', background: '#E3F2FD',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer'
+                    }}>
+                        <div style={{ fontSize: '24px' }}>🔥</div>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#1565C0' }}>고강도 운동 (-2.0g)</span>
+                    </button>
+
+                    {/* Water Check (moved here for grid layout) */}
                     <button onClick={() => addWater(250)} style={{
                         padding: '20px', borderRadius: '16px', border: 'none', background: '#E0F7FA',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer'
                     }}>
-                        <Droplet size={24} color="#00BCD4" />
+                        <div style={{ fontSize: '24px' }}>💧</div>
                         <span style={{ fontSize: '14px', fontWeight: 700, color: '#00838F' }}>물 한잔 (+250ml)</span>
                     </button>
                 </div>
@@ -196,7 +200,7 @@ const Home = () => {
                                     <span>{log.type}</span>
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px' }}>
-                                    <span style={{ fontWeight: 700 }}>+{log.amount}g</span>
+                                    <span style={{ fontWeight: 700 }}>{log.amount > 0 ? '+' : ''}{log.amount}g</span>
                                     <span style={{ color: '#CFD8DC', fontSize: '12px' }}>{log.time.slice(0, 5)}</span>
                                 </div>
                             </div>
