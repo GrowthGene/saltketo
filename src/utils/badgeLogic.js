@@ -101,7 +101,7 @@ export const getBadges = (logs, waterIntake, dailyStats, goal, user, engineStatu
         },
         {
             id: 'master_lab_director',
-            name: '마스터 연구소장',
+            name: '키토 마스터',
             desc: '최고 레벨(5) 달성',
             icon: '💎',
             color: '#673AB7',

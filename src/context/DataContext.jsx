@@ -72,7 +72,7 @@ export const DataProvider = ({ children }) => {
 
     // 1. RP (Research Point) & Level System
     const LEVEL_THRESHOLDS = [0, 500, 2000, 5000, 15000];
-    const TITLES = ['보조 연구원', '주니어 연구원', '시니어 연구원', '수석 연구원', '마스터 연구소장'];
+    const TITLES = ['보조 연구원', '주니어 연구원', '시니어 연구원', '수석 연구원', '키토 마스터'];
 
     const gainRP = (amount) => {
         setUser(prev => {
