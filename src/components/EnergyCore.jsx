@@ -49,11 +49,11 @@ const EnergyCore = ({ current, goal, percentage: propPercentage, color: propColo
                 transition: 'all 1s ease',
                 animation: 'pulse 3s ease-in-out infinite'
             }}>
-                <span style={{ fontSize: '12px', opacity: 0.8, color: 'white', fontWeight: 600 }}>{status || 'ENERGY LEVEL'}</span>
-                <span style={{ fontSize: '36px', fontWeight: 900, color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                <span style={{ fontSize: '12px', opacity: 0.9, color: 'white', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{status || 'ENERGY LEVEL'}</span>
+                <span style={{ fontSize: '36px', fontWeight: 900, color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                     {typeof percentage === 'number' ? percentage.toFixed(0) : 0}%
                 </span>
-                <span style={{ fontSize: '12px', color: 'white', marginTop: '4px' }}>
+                <span style={{ fontSize: '12px', color: 'white', marginTop: '4px', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                     {current !== undefined ? `${current}g / ${goal}g` : 'Engine Active'}
                 </span>
             </div>

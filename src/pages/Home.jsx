@@ -66,14 +66,14 @@ const Home = () => {
             {/* Main Widget: Energy Core */}
             <section className="card" onClick={() => alert('엔진 상세 정보: ' + statusMsg)} style={{
                 marginBottom: '20px', textAlign: 'center', padding: '40px 20px', cursor: 'pointer',
-                background: `linear-gradient(135deg, #ffffff 0%, ${statusData.color}15 100%)`,
+                background: `linear-gradient(135deg, var(--surface) 0%, ${statusData.color}15 100%)`,
                 border: `1px solid ${statusData.color}30`
             }}>
                 <div style={{ marginBottom: '20px', fontWeight: 700, color: statusData.color, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                     <Activity size={18} /> {statusMsg}
                 </div>
                 <EnergyCore percentage={statusData.status === 'burning' ? 100 : statusData.status === 'warming' ? 60 : 20} status={statusData.status} color={statusData.color} />
-                <div style={{ marginTop: '20px', fontSize: '13px', color: '#78909C' }}>
+                <div style={{ marginTop: '20px', fontSize: '13px', color: 'var(--text-muted)' }}>
                     목표치까지 {Math.max(0, goal - totalSalt).toFixed(1)}g 남았습니다
                 </div>
             </section>
