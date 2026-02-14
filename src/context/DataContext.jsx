@@ -53,6 +53,9 @@ export const DataProvider = ({ children }) => {
         safeParse('secretLab_settings', { theme: 'light', notifications: true })
     );
 
+    // Derived State
+    const goal = user.goalWeight > 0 ? user.goalWeight : 10; // Default to 10g if not set
+
     // --- Persistence ---
     useEffect(() => { localStorage.setItem('secretLab_user', JSON.stringify(user)); }, [user]);
     useEffect(() => { localStorage.setItem('secretLab_daily', JSON.stringify(dailyStats)); }, [dailyStats]);
@@ -90,15 +93,11 @@ export const DataProvider = ({ children }) => {
     // 2. Engine Status Algorithm
     // Returns: 'idle', 'warming', 'burning', 'overheat' (warning)
     const getEngineStatus = () => {
-        const SALT_GOAL = 10; // g
+        const SALT_GOAL = goal; // Use dynamic goal
 
         // Calculate Salt Intake from Logs
         const todaySalt = logs
-            .filter(l => l.time.includes(new Date().toLocaleTimeString().slice(0, 2)) || true) // Simplified for demo, essentially all logs are kept in state. In real app, filter by date.
-            // Actually logs state doesn't have date structure yet for filtering, assuming clean list or day-filter in UI.
-            // For V3, let's look at 'logs' timestamp if we add it, or just iterate. 
-            // Existing logs have 'time' string. Let's rely on daily reset manual or just sum all for now as user context is simple.
-            // BETTER: Filter logs by today's date if timestamp exists.
+            .filter(l => l.time.includes(new Date().toLocaleTimeString().slice(0, 2)) || true) // Simplified
             .reduce((sum, log) => sum + (log.type !== 'water' ? log.amount : 0), 0);
 
         const saltRatio = Math.min(todaySalt / SALT_GOAL, 1.5); // Cap at 150%
@@ -129,6 +128,18 @@ export const DataProvider = ({ children }) => {
     };
 
     // --- Actions ---
+    const updateUser = (updates) => {
+        setUser(prev => ({ ...prev, ...updates }));
+    };
+
+    const updateSettings = (updates) => {
+        setSettings(prev => ({ ...prev, ...updates }));
+    };
+
+    const updateGoal = (newGoal) => {
+        setUser(prev => ({ ...prev, goalWeight: newGoal }));
+    };
+
     const addLog = (amount, label) => {
         const newLog = {
             id: Date.now(),
@@ -178,8 +189,9 @@ export const DataProvider = ({ children }) => {
 
     return (
         <DataContext.Provider value={{
-            user, logs, waterIntake, dailyStats, settings,
-            addLog, addWater, recordMeal, updateCondition, resetData, getEngineStatus, removeLog
+            user, logs, waterIntake, dailyStats, settings, goal,
+            addLog, addWater, recordMeal, updateCondition, resetData, getEngineStatus, removeLog,
+            updateUser, updateSettings, updateGoal
         }}>
             {children}
         </DataContext.Provider>

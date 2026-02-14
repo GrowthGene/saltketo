@@ -4,22 +4,22 @@ import EnergyCore from '../components/EnergyCore';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
-    const { 
-        user, 
-        logs, 
+    const {
+        user,
+        logs,
         addLog,
         addWater,
         waterIntake,
         recordMeal,
-        getEngineStatus 
+        getEngineStatus,
+        goal
     } = useData();
-    
+
     const navigate = useNavigate();
-    const GOAL = 10; // Daily Salt Goal
 
     // Calculate total salt intake today
     const totalSalt = logs
-        .filter(log => log.time.includes(new Date().toLocaleDateString()) || true) 
+        .filter(log => log.time.includes(new Date().toLocaleDateString()) || true)
         .reduce((acc, log) => acc + log.amount, 0);
 
     const quickActions = [
@@ -67,7 +67,7 @@ const Home = () => {
                 </div>
                 <EnergyCore percentage={statusData.status === 'burning' ? 100 : statusData.status === 'warming' ? 60 : 20} status={statusData.status} color={statusData.color} />
                 <div style={{ marginTop: '20px', fontSize: '13px', color: '#78909C' }}>
-                    목표치까지 {Math.max(0, GOAL - totalSalt).toFixed(1)}g 남았습니다
+                    목표치까지 {Math.max(0, goal - totalSalt).toFixed(1)}g 남았습니다
                 </div>
             </section>
 
