@@ -15,15 +15,12 @@ const BottomNav = () => {
       bottom: 0,
       width: '100%',
       maxWidth: '480px',
-      background: 'var(--surface)',
-      backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)',
-      borderTop: '1px solid rgba(0,0,0,0.05)',
+      background: 'white',
+      borderTop: '1px solid #eee',
       padding: '12px 0 24px 0',
       display: 'flex',
       justifyContent: 'space-around',
-      zIndex: 100,
-      transition: 'background 0.3s ease'
+      zIndex: 100
     }}>
       {navItems.map(({ icon: Icon, label, path }) => (
         <NavLink
@@ -34,14 +31,13 @@ const BottomNav = () => {
             flexDirection: 'column',
             alignItems: 'center',
             textDecoration: 'none',
-            color: isActive ? 'var(--primary-500)' : 'var(--text-muted)',
+            color: isActive ? 'var(--text-main)' : '#ccc',
             fontSize: '11px',
             gap: '4px',
-            fontWeight: isActive ? 700 : 500,
-            transition: 'color 0.2s ease'
+            fontWeight: isActive ? 600 : 400
           })}
         >
-          <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+          <Icon size={24} strokeWidth={2.5} />
           <span>{label}</span>
         </NavLink>
       ))}
